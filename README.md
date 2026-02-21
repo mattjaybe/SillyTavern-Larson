@@ -43,7 +43,7 @@
 
 **8 Animation Styles** • **3 Independent States** • **Custom Themes** • **Mobile Optimized**
 
-[📥 Install Now](#-installation) • [🎮 Quick Start](#-quick-start-guide) • [🎬 See All Animations](#-animation-showcase)
+[📥 Install Now](#installation) • [🎮 Quick Start](#quick) • [🎬 See All Animations](#animation-showcase)
 
 </div>
 
@@ -109,7 +109,7 @@
 ## 🚀 Installation
 
 <details open>
-<summary><b>📦 Click to see installation steps</b></summary>
+<summary id="installation"><b>📦 Click to see installation steps</b></summary>
 
 <br>
 
@@ -131,7 +131,7 @@
 ## 🎮 Quick Start Guide
 
 <details open>
-<summary><b>⚡ Get started in 30 seconds</b></summary>
+<summary id="quick"><b>⚡ Get started in 30 seconds</b></summary>
 
 <br>
 
@@ -160,7 +160,7 @@
 
 ## 🎬 All 8 Animation Styles
 
-<table id="animate-showcase">
+<table id="animation-showcase">
 <tr>
 <td width="50%">
 
