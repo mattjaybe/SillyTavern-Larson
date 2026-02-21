@@ -25,7 +25,7 @@
 ### 🎨 Beautiful Animations
 *Gradient style with live color transitions*
 
-![Gradient](https://github.com/user-attachments/assets/04b6dffe-aabf-4bb1-89fd-ce69b96089e6)
+![gradient](https://github.com/user-attachments/assets/e9817bb3-23d1-48e8-acb2-ed29493cd77e)
 
 </td>
 <td width="50%">
@@ -84,7 +84,7 @@
 <td width="50%">
 
 ### 🎨 Extensive Theming
-- **9 Built-in Themes** (including SillyTavern match)
+- **9 Built-in Themes** (including SillyTavern theme)
 - **Custom Theme Creator** with 4-color system
 - **Live Preview** with real-time updates
 - **Advanced Mode** for hex precision
@@ -95,7 +95,7 @@
 
 ### 📐 Display Options
 - **3 Bar Heights** (Compact/Default/Tall)
-- **Hide When Idle** transparency mode
+- **Hide When Idle** invisible bar when idle
 - **Mobile Optimized** with touch support
 - **Smart Thinking Detection** for multiple LLMs
 - **Auto-Save** settings across sessions
