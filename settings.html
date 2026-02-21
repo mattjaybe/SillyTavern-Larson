@@ -1,0 +1,186 @@
+<div class="larson_settings">
+    <div class="inline-drawer">
+        <div class="inline-drawer-toggle inline-drawer-header">
+            <b>Larson</b>
+            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+        </div>
+        <div class="inline-drawer-content">
+            <!-- Power Toggle -->
+            <label class="checkbox_label larson_toggle_row" for="larson_enabled">
+                <span class="larson_toggle_label">
+                    <i class="fa-solid fa-power-off"></i> Enable Larson
+                </span>
+                <label class="larson_toggle_switch">
+                    <input id="larson_enabled" type="checkbox" class="checkbox">
+                    <span class="larson_toggle_slider"></span>
+                </label>
+            </label>
+
+            <hr class="larson_divider">
+
+
+
+            <!-- 3-Column Grid Layout -->
+            <div class="larson_grid_container">
+                <!-- Header Row -->
+                <div class="larson_grid_header larson_grid_col_label"></div>
+                <div class="larson_grid_header larson_grid_col_animation">Animation</div>
+                <div class="larson_grid_header larson_grid_col_speed">Speed</div>
+
+                <!-- Row 1: Generating -->
+                <div class="larson_grid_label">
+                    <i class="fa-solid fa-circle-notch"></i> Generating
+                </div>
+                <div class="larson_grid_control">
+                    <select id="larson_animation_style" class="text_pole larson_select">
+                        <option value="gradient">Gradient</option>
+                        <option value="breathe">Breathe</option>
+                        <option value="pulse">Pulse</option>
+                        <option value="cylon">Cylon</option>
+                        <option value="segment">Segment</option>
+                        <option value="glitch">Glitch</option>
+                        <option value="liquid">Liquid</option>
+                        <option value="convergence">Convergence</option>
+                    </select>
+                </div>
+                <div class="larson_grid_control">
+                    <select id="larson_animation_speed" class="text_pole larson_select">
+                        <option value="slow">Slow</option>
+                        <option value="normal">Normal</option>
+                        <option value="fast">Fast</option>
+                    </select>
+                </div>
+
+                <!-- Row 2: Idle -->
+                <div class="larson_grid_label">
+                    <label class="checkbox_label larson_grid_checkbox" for="larson_idle_enabled">
+                        <span><i class="fa-solid fa-pause"></i> Idle</span>
+                        <label class="larson_toggle_switch">
+                            <input id="larson_idle_enabled" type="checkbox" class="checkbox">
+                            <span class="larson_toggle_slider"></span>
+                        </label>
+                    </label>
+                </div>
+                <div class="larson_grid_control">
+                    <select id="larson_idle_style" class="text_pole larson_select" disabled>
+                        <option value="gradient">Gradient</option>
+                        <option value="breathe">Breathe</option>
+                        <option value="pulse">Pulse</option>
+                        <option value="cylon">Cylon</option>
+                        <option value="segment">Segment</option>
+                        <option value="glitch">Glitch</option>
+                        <option value="liquid">Liquid</option>
+                        <option value="convergence">Convergence</option>
+                    </select>
+                </div>
+                <div class="larson_grid_control">
+                    <select id="larson_idle_speed" class="text_pole larson_select" disabled>
+                        <option value="slow">Slow</option>
+                        <option value="normal">Normal</option>
+                        <option value="fast">Fast</option>
+                    </select>
+                </div>
+
+                <!-- Row 3: Thinking -->
+                <div class="larson_grid_label">
+                    <label class="checkbox_label larson_grid_checkbox" for="larson_thinking_enabled">
+                        <span><i class="fa-solid fa-brain"></i> Thinking</span>
+                        <label class="larson_toggle_switch">
+                            <input id="larson_thinking_enabled" type="checkbox" class="checkbox">
+                            <span class="larson_toggle_slider"></span>
+                        </label>
+                    </label>
+                </div>
+                <div class="larson_grid_control">
+                    <select id="larson_thinking_style" class="text_pole larson_select" disabled>
+                        <option value="gradient">Gradient</option>
+                        <option value="breathe">Breathe</option>
+                        <option value="pulse">Pulse</option>
+                        <option value="cylon">Cylon</option>
+                        <option value="segment">Segment</option>
+                        <option value="glitch">Glitch</option>
+                        <option value="liquid">Liquid</option>
+                        <option value="convergence">Convergence</option>
+                    </select>
+                </div>
+                <div class="larson_grid_control">
+                    <select id="larson_thinking_speed" class="text_pole larson_select" disabled>
+                        <option value="slow">Slow</option>
+                        <option value="normal">Normal</option>
+                        <option value="fast">Fast</option>
+                    </select>
+                </div>
+                
+                <!-- Warning for Thinking - now part of Thinking section -->
+                <div id="larson_thinking_warning" class="larson_warning larson_thinking_note" style="display: none;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Note: Only functions with Streaming presets.
+                </div>
+            </div>
+
+            <hr class="larson_divider">
+
+            <!-- Global Settings Section -->
+            <div class="larson_global_settings">
+                <h4 class="larson_section_title">
+                    <i class="fa-solid fa-sliders"></i> Global Settings
+                </h4>
+
+                <div class="larson_setting_row">
+                    <span class="larson_setting_label"><i class="fa-solid fa-up-down"></i> Bar Height</span>
+                    <select id="larson_bar_height" class="text_pole larson_select">
+                        <option value="compact">Compact</option>
+                        <option value="default">Default</option>
+                        <option value="tall">Tall</option>
+                    </select>
+                </div>
+
+                <div class="larson_setting_row">
+                    <span class="larson_setting_label"><i class="fa-solid fa-paintbrush"></i> Theme</span>
+                    <div class="larson_custom_select_wrapper">
+                        <button type="button" id="larson_theme_select_button" class="larson_custom_select_button">
+                            <span id="larson_theme_select_current" class="larson_theme_select_current">
+                                <span class="larson_theme_select_name">SillyTavern</span>
+                                <div class="larson_theme_select_swatches">
+                                    <span style="background:#7c3aed"></span>
+                                    <span style="background:#a855f7"></span>
+                                    <span style="background:#c084fc"></span>
+                                </div>
+                            </span>
+                            <i class="fa-solid fa-chevron-down larson_select_chevron"></i>
+                        </button>
+                        <div id="larson_theme_dropdown" class="larson_theme_dropdown" style="display:none;">
+                            <!-- Options filled by JS with theme swatches -->
+                        </div>
+                        <select id="larson_theme" class="text_pole larson_select" style="display:none;">
+                            <!-- Hidden actual select for compatibility -->
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="larson_setting_row">
+                    <span class="larson_setting_label"><i class="fa-solid fa-eye-slash"></i> Hide When Idle</span>
+                    <label class="larson_toggle_switch">
+                        <input id="larson_hide_when_idle" type="checkbox" class="checkbox">
+                        <span class="larson_toggle_slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <hr class="larson_divider">
+
+            <!-- Custom Themes Section -->
+            <div class="larson_section larson_section_custom_themes">
+                <h4 class="larson_section_title">
+                    <i class="fa-solid fa-palette-circle-dashed"></i> Custom Themes
+                </h4>
+                <p class="larson_section_hint">Create themes with custom colors. Click \"Add custom theme\" to
+                    open the editor.</p>
+                <div id="larson_custom_themes_list" class="larson_custom_themes_list_settings"></div>
+                <button type="button" id="larson_add_custom_theme" class="larson_add_theme_btn_settings menu_button">
+                    <i class="fa-solid fa-plus"></i> Add custom theme
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Theme add/edit modal is created in JS and appended to document.body so it works from both settings panel and bar popup -->

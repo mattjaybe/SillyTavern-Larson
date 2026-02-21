@@ -1,0 +1,5073 @@
+﻿/* ============================================================
+   Larson - AI processing indicator bar
+   Uses SillyTavern theme variables for seamless integration.
+   Panel/dropdown are fully opaque.
+   ============================================================ */
+
+/* SillyTavern theme integration - inherit from ST theme */
+:root {
+    --larson-accent: var(--SmartThemeQuoteColor, #7c3aed);
+    --larson-accent-hover: var(--SmartThemeChatTintColor, #8b5cf6);
+    --larson-border: var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.15));
+    --larson-text: var(--SmartThemeBodyColor, #f3f4f6);
+    --larson-text-muted: var(--SmartThemeBodyColor, #9ca3af);
+    --larson-header-muted: #aaaaaa;
+}
+
+/* Touch target wrapper */
+.larson_bar_container {
+    position: relative;
+    width: 100%;
+    z-index: 99999;
+    flex-shrink: 0;
+    pointer-events: none;
+    display: none;
+    /* Let clicks pass through unless enabled */
+}
+
+.larson_bar_container.larson_enabled {
+    pointer-events: auto;
+    display: block;
+}
+
+/* Add active state feedback for touch */
+.larson_bar_container:active .larson_bar {
+    filter: brightness(1.2);
+    transition: filter 0.1s ease;
+}
+
+/* Expanded touch area - above the bar for easy tapping */
+.larson_touch_overlay {
+    position: absolute;
+    top: -8px;
+    bottom: -8px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 100001;
+    cursor: pointer;
+    background: transparent;
+    -webkit-tap-highlight-color: transparent;
+    /* Ensure touch events work */
+    touch-action: manipulation;
+    pointer-events: auto;
+}
+
+/* Debug mode - make touch area visible (comment out in production) */
+/*
+.larson_touch_overlay {
+    background: rgba(255, 0, 0, 0.1) !important;
+    border: 1px dashed rgba(255, 0, 0, 0.3) !important;
+}
+*/
+
+/* On mobile, make the touch area even larger */
+@media (max-width: 768px) {
+    .larson_bar_container {
+        z-index: 100000;
+    }
+
+    .larson_touch_overlay {
+        top: -30px;
+        bottom: -30px;
+        z-index: 100002;
+        /* Force ensure it's clickable */
+        pointer-events: auto !important;
+    }
+}
+
+/* Default theme (purple) - overridden by .larson_theme_* */
+/* Default theme (purple) - overridden by .larson_theme_* */
+.larson_bar {
+    --larson-color-a: #240046;
+    --larson-color-b: #9D00FF;
+    --larson-color-c: #E0B0FF;
+    --larson-color-d: #FF69B4;
+    --larson-glow: rgba(157, 0, 255, 0.5);
+}
+
+/* Theme presets - set --larson-color-a/b/c and --larson-glow */
+/* Note: Glow uses Color B (Neon) for visibility */
+.larson_theme_default {
+    --larson-color-a: #240046;
+    --larson-color-b: #9D00FF;
+    --larson-color-c: #E0B0FF;
+    --larson-color-d: #FF69B4;
+    --larson-glow: rgba(157, 0, 255, 0.5);
+}
+
+.larson_theme_ocean {
+    --larson-color-a: #001133;
+    --larson-color-b: #0088FF;
+    --larson-color-c: #00FFFF;
+    --larson-color-d: #7FFFD4;
+    --larson-glow: rgba(0, 136, 255, 0.5);
+}
+
+.larson_theme_sunset {
+    --larson-color-a: #4A0E00;
+    --larson-color-b: #FF4500;
+    --larson-color-c: #FFD700;
+    --larson-color-d: #FF8C00;
+    --larson-glow: rgba(255, 69, 0, 0.5);
+}
+
+.larson_theme_forest {
+    --larson-color-a: #002200;
+    --larson-color-b: #00FF41;
+    --larson-color-c: #CCFF00;
+    --larson-color-d: #32CD32;
+    --larson-glow: rgba(0, 255, 65, 0.5);
+}
+
+.larson_theme_mono {
+    --larson-color-a: #000000;
+    --larson-color-b: #808080;
+    --larson-color-c: #FFFFFF;
+    --larson-color-d: #C0C0C0;
+    --larson-glow: rgba(128, 128, 128, 0.5);
+}
+
+.larson_theme_synthwave {
+    --larson-color-a: #2E003E;
+    --larson-color-b: #FF00FF;
+    --larson-color-c: #00F3FF;
+    --larson-color-d: #FF1493;
+    --larson-glow: rgba(255, 0, 255, 0.5);
+}
+
+.larson_theme_rose {
+    --larson-color-a: #330000;
+    --larson-color-b: #FF0040;
+    --larson-color-c: #FFB6C1;
+    --larson-color-d: #FF69B4;
+    --larson-glow: rgba(255, 0, 64, 0.5);
+}
+
+.larson_theme_metal {
+    --larson-color-a: #1a1a1a;
+    --larson-color-b: #d4af37;
+    --larson-color-c: #c0c0c0;
+    --larson-color-d: #b87333;
+    --larson-glow: rgba(212, 175, 55, 0.5);
+}
+
+/* SillyTavern theme: colors set from JS from ST CSS variables */
+.larson_theme_sillytavern {
+    /* --larson-color-a/b/c and --larson-glow set inline by JS */
+    /* Placeholder to avoid empty ruleset warning */
+    --larson-dynamic: 1;
+}
+
+/* Custom theme uses inline style from JS (--larson-color-a, --larson-color-b, --larson-color-c) */
+
+/* ---- Bar base (in-flow above input area) ---- */
+.larson_bar {
+    position: relative;
+    width: 100%;
+    z-index: 99999;
+    height: 4px;
+    cursor: pointer;
+    background: var(--larson-color-a);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    pointer-events: none;
+    flex-shrink: 0;
+    /* Prevent text selection on mobile */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    /* Pop variables: boosted bright/dark derivatives for contrast */
+    --bar-bright: color-mix(in srgb, var(--larson-color-c) 70%, white);
+    --bar-dark: color-mix(in srgb, var(--larson-color-a) 55%, black);
+}
+
+.larson_bar.larson_enabled {
+    pointer-events: auto;
+    visibility: visible;
+    opacity: 1;
+    background: var(--larson-color-a);
+    box-shadow:
+        0 0 4px var(--larson-glow),
+        0 0 12px var(--larson-glow),
+        0 0 0 1px var(--larson-border);
+}
+
+/* Mobile z-index boost */
+@media (max-width: 768px) {
+    .larson_bar {
+        z-index: 100000;
+    }
+}
+
+.larson_bar.larson_enabled:not(.larson_processing) {
+    animation: none;
+}
+
+/* Idle: static (default) or chosen style when "Idle" toggle is on — only when NOT processing */
+/* Idle: static (default) or chosen style when "Idle" toggle is on — only when NOT processing */
+.larson_bar.larson_enabled.larson_idle_static:not(.larson_processing) {
+    /* Use Neon (Color B) for static bar visibility */
+    background: var(--larson-color-b);
+    animation: none;
+    box-shadow:
+        0 0 4px var(--larson-glow),
+        0 0 12px var(--larson-glow),
+        0 0 0 1px var(--larson-border);
+}
+
+/* Idle animation styles (when Idle toggle is on) - slower pace */
+/* Gradient: st@keyframes larson_gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 200% 50%;
+    }
+}
+
+.larson_bar.larson_style_gradient.larson_processing {
+    background-color: var(--larson-color-a);
+    background: linear-gradient(90deg,
+            var(--larson-color-a) 0%, var(--larson-color-a) 12%,
+            var(--larson-color-b) 20%, var(--larson-color-b) 30%,
+            var(--larson-color-c) 40%, var(--larson-color-c) 50%,
+            var(--larson-color-d) 60%, var(--larson-color-d) 70%,
+            var(--larson-color-b) 80%, var(--larson-color-b) 88%,
+            var(--larson-color-a) 92%, var(--larson-color-a) 100%);
+    background-size: 200% 100%;
+    animation: larson_gradient 2.67s linear infinite;
+}
+
+/* 2. Breathe - Fixed to use brightness instead of opacity */
+@keyframes larson_breathe {
+
+    0%,
+    100% {
+        opacity: 1;
+        filter: brightness(1);
+        box-shadow: 0 0 5px var(--larson-glow);
+    }
+
+    50% {
+        opacity: 1;
+        filter: brightness(2.0);
+        box-shadow: 0 0 20px var(--larson-glow);
+    }
+}
+
+.larson_bar.larson_style_breathe.larson_processing {
+    background: var(--larson-color-b);
+    animation: larson_breathe 2.67s ease-in-out infinite;
+}
+
+/* 3. Pulse - Traveling wave effect using B, C, D colors */
+@keyframes larson_pulse_wave {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.larson_bar.larson_style_pulse.larson_processing {
+    background: linear-gradient(90deg,
+            var(--larson-color-b) 0%,
+            var(--larson-color-c) 25%,
+            var(--larson-color-d) 50%,
+            var(--larson-color-c) 75%,
+            var(--larson-color-b) 100%);
+    background-size: 200% 100%;
+    animation: larson_pulse_wave 2.67s ease-in-out infinite;
+    box-shadow: 0 0 12px var(--larson-glow);
+}
+
+/* Idle breathe style */
+.larson_bar.larson_idle_style_breathe:not(.larson_processing) {
+    background: var(--larson-color-b);
+    animation: larson_breathe 2.67s ease-in-out infinite;
+    opacity: 1;
+    /* Explicitly opaque */
+    visibility: visible;
+}
+
+.larson_bar.larson_idle_style_pulse:not(.larson_processing) {
+    background: linear-gradient(90deg,
+            var(--larson-color-b) 0%,
+            var(--larson-color-c) 25%,
+            var(--larson-color-d) 50%,
+            var(--larson-color-c) 75%,
+            var(--larson-color-b) 100%);
+    background-size: 200% 100%;
+    animation: larson_pulse_wave 2.67s ease-in-out infinite;
+    box-shadow: 0 0 12px var(--larson-glow);
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Idle gradient style */
+.larson_bar.larson_idle_style_gradient:not(.larson_processing) {
+    background: linear-gradient(90deg,
+            var(--larson-color-a) 0%, var(--larson-color-a) 12%,
+            var(--larson-color-b) 20%, var(--larson-color-b) 30%,
+            var(--larson-color-c) 40%, var(--larson-color-c) 50%,
+            var(--larson-color-d) 60%, var(--larson-color-d) 70%,
+            var(--larson-color-b) 80%, var(--larson-color-b) 88%,
+            var(--larson-color-a) 92%, var(--larson-color-a) 100%);
+    background-size: 200% 100%;
+    animation: larson_gradient 2.67s linear infinite;
+}
+
+/* Idle cylon style */
+.larson_bar.larson_idle_style_cylon:not(.larson_processing) {
+    background: var(--larson-color-a);
+    overflow: hidden;
+}
+
+.larson_bar.larson_idle_style_cylon:not(.larson_processing)::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            var(--larson-color-b) 25%,
+            var(--larson-color-c) 50%,
+            var(--larson-color-b) 75%,
+            transparent 100%);
+    box-shadow:
+        0 0 8px var(--larson-glow),
+        0 0 20px var(--larson-glow),
+        0 0 35px var(--larson-glow);
+    animation: larson_cylon 1.6s ease-in-out infinite;
+}
+
+/* Idle segment style */
+.larson_bar.larson_idle_style_segment:not(.larson_processing) {
+    background-color: #000000;
+    background-image: linear-gradient(90deg,
+            var(--larson-color-a) 0%, var(--larson-color-b) 40%,
+            var(--larson-color-c) 50%, var(--larson-color-b) 60%,
+            var(--larson-color-a) 100%);
+    background-size: 200% 100%;
+    -webkit-mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 10px, transparent 10px, transparent 14px);
+    mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 10px, transparent 10px, transparent 14px);
+    animation: larson_segment 2.67s linear infinite;
+}
+
+/* Idle glitch style */
+.larson_bar.larson_idle_style_glitch:not(.larson_processing) {
+    background: var(--larson-color-b);
+    animation: larson_glitch 3.33s steps(12) infinite;
+}
+
+/* Idle liquid style */
+.larson_bar.larson_idle_style_liquid:not(.larson_processing) {
+    background: var(--larson-color-a);
+    overflow: hidden;
+    position: relative;
+}
+
+.larson_bar.larson_idle_style_liquid:not(.larson_processing)::before {
+    content: '';
+    position: absolute;
+    top: -150%;
+    left: -20%;
+    width: 200px;
+    height: 400%;
+    background: radial-gradient(ellipse at center, var(--larson-color-c) 0%, var(--larson-color-c) 25%, var(--larson-color-b) 50%, transparent 70%);
+    opacity: 0.75;
+    animation: larson_liquid_scan 5.33s ease-in-out infinite;
+    border-radius: 50%;
+    filter: blur(1px);
+}
+
+.larson_bar.larson_idle_style_liquid:not(.larson_processing)::after {
+    content: '';
+    position: absolute;
+    top: -150%;
+    left: -20%;
+    width: 180px;
+    height: 400%;
+    background: radial-gradient(ellipse at center, var(--larson-color-b) 0%, var(--larson-color-b) 30%, transparent 65%);
+    opacity: 0.65;
+    animation: larson_liquid_scan 5.33s ease-in-out infinite 2.67s;
+    border-radius: 50%;
+    filter: blur(1px);
+}
+
+/* Idle convergence style */
+.larson_bar.larson_idle_style_convergence:not(.larson_processing) {
+    background: var(--larson-color-a);
+    overflow: hidden;
+    position: relative;
+}
+
+.larson_bar.larson_idle_style_convergence:not(.larson_processing)::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            var(--larson-color-b) 0%,
+            var(--larson-color-b) 60%,
+            var(--larson-color-c) 90%,
+            var(--larson-color-c) 100%);
+    box-shadow: 5px 0 15px var(--larson-glow);
+    animation: larson_convergence_slide_left 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.larson_bar.larson_idle_style_convergence:not(.larson_processing)::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(270deg,
+            var(--larson-color-c) 0%,
+            var(--larson-color-c) 60%,
+            var(--larson-color-b) 90%,
+            var(--larson-color-b) 100%);
+    box-shadow: -5px 0 15px var(--larson-glow);
+    animation: larson_convergence_slide_right 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+
+/* 3. Cylon */
+@keyframes larson_cylon {
+    0% {
+        left: -30%;
+        opacity: 0.5;
+    }
+
+    50% {
+        left: 100%;
+        opacity: 1;
+    }
+
+    100% {
+        left: -30%;
+        opacity: 0.5;
+    }
+}
+
+.larson_bar.larson_style_cylon.larson_processing {
+    background: var(--larson-color-b);
+    overflow: hidden;
+}
+
+.larson_bar.larson_style_cylon.larson_processing::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            var(--larson-color-b) 0%,
+            var(--larson-color-a) 15%,
+            var(--larson-color-b) 35%,
+            var(--larson-color-c) 50%,
+            var(--larson-color-b) 65%,
+            var(--larson-color-a) 85%,
+            var(--larson-color-b) 100%);
+    box-shadow: 0 0 8px var(--larson-glow);
+    animation: larson_cylon 1.2s ease-in-out infinite;
+}
+
+/* 4. Segment */
+@keyframes larson_segment {
+    0% {
+        background-position: 0% 0%;
+    }
+
+    100% {
+        background-position: 200% 0%;
+    }
+}
+
+.larson_bar.larson_style_segment.larson_processing {
+    background-color: #000000;
+    background-image: linear-gradient(90deg,
+            var(--larson-color-a) 0%, var(--larson-color-b) 40%,
+            var(--larson-color-c) 50%, var(--larson-color-b) 60%,
+            var(--larson-color-a) 100%);
+    background-size: 200% 100%;
+    -webkit-mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 7%, rgba(0, 0, 0, 0) 7%, rgba(0, 0, 0, 0) 10%);
+    mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 7%, rgba(0, 0, 0, 0) 7%, rgba(0, 0, 0, 0) 10%);
+    animation: larson_segment 2s linear infinite;
+}
+
+/* 5. Glitch */
+@keyframes larson_glitch {
+    0% {
+        transform: translate(0);
+        background: var(--larson-color-b);
+    }
+
+    10% {
+        transform: translate(-2px, 2px);
+        background: var(--larson-color-c);
+    }
+
+    20% {
+        transform: translate(-2px, -2px);
+        background: var(--larson-color-b);
+    }
+
+    30% {
+        transform: translate(2px, 2px);
+        background: var(--larson-color-d);
+    }
+
+    40% {
+        transform: translate(2px, -2px);
+        background: var(--larson-color-c);
+    }
+
+    50% {
+        transform: translate(-2px, 2px);
+        background: var(--larson-color-b);
+    }
+
+    60% {
+        transform: translate(-2px, -2px);
+        background: var(--larson-color-d);
+    }
+
+    70% {
+        transform: translate(2px, 2px);
+        background: var(--larson-color-c);
+    }
+
+    80% {
+        transform: translate(2px, -2px);
+        background: var(--larson-color-b);
+    }
+
+    90% {
+        transform: translate(0);
+        background: var(--larson-color-d);
+    }
+
+    100% {
+        transform: translate(0);
+        background: var(--larson-color-b);
+    }
+}
+
+.larson_bar.larson_style_glitch.larson_processing {
+    background: var(--larson-color-b);
+    animation: larson_glitch 2.5s steps(12) infinite;
+}
+
+/* 6. Liquid - removed old version, see processing styles below */
+
+/* 7. Convergence - removed old version, see processing styles below */
+
+/* Thinking: default = slow pulse (::before). When "Thinking" toggle + style = use that animation. */
+@keyframes larson_thinking_pulse {
+
+    0%,
+    100% {
+        opacity: 0.85;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Default thinking state styles removed - was covering generation animations with dark overlay.
+   When thinking animations are disabled, the bar now shows the normal generation animation
+   without any dimming or interference. Users who want a thinking indicator should enable
+   thinking animations and select a specific style. */
+
+/* When a thinking style is chosen, use that animation instead of ::before pulse */
+.larson_bar.larson_processing.larson_thinking[class*="larson_thinking_style_"]::before {
+    display: none !important;
+}
+
+/* Thinking animation styles (when Thinking toggle is on) */
+/* Gradient thinking */
+.larson_bar.larson_processing.larson_thinking.larson_thinking_style_gradient {
+    background: linear-gradient(90deg,
+            var(--larson-color-a) 0%, var(--larson-color-a) 12%,
+            var(--larson-color-b) 20%, var(--larson-color-b) 30%,
+            var(--larson-color-c) 40%, var(--larson-color-c) 50%,
+            var(--larson-color-d) 60%, var(--larson-color-d) 70%,
+            var(--larson-color-b) 80%, var(--larson-color-b) 88%,
+            var(--larson-color-a) 92%, var(--larson-color-a) 100%);
+    background-size: 200% 100%;
+    animation: larson_gradient 3.33s linear infinite;
+}
+
+/* Breathe thinking */
+.larson_bar.larson_processing.larson_thinking.larson_thinking_style_breathe {
+    background: var(--larson-color-b);
+    animation: larson_breathe 3.33s ease-in-out infinite;
+}
+
+/* Pulse thinking */
+.larson_bar.larson_processing.larson_thinking.larson_thinking_style_pulse {
+    background: linear-gradient(90deg,
+            var(--larson-color-b) 0%,
+            var(--larson-color-c) 25%,
+            var(--larson-color-d) 50%,
+            var(--larson-color-c) 75%,
+            var(--larson-color-b) 100%);
+    background-size: 200% 100%;
+    animation: larson_pulse_wave 3.33s ease-in-out infinite;
+    box-shadow: 0 0 12px var(--larson-glow);
+}
+
+/* Cylon thinking */
+.larson_bar.larson_processing.larson_thinking.larson_thinking_style_cylon {
+    background: var(--larson-color-a);
+    overflow: hidden;
+}
+
+.larson_bar.larson_processing.larson_thinking.larson_thinking_style_cylon::after {
+    display: block !important;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 25%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            var(--larson-color-b) 25%,
+            var(--larson-color-c) 50%,
+            var(--larson-color-b) 75%,
+            transparent 100%);
+    box-shadow:
+        0 0 8px var(--larson-glow),
+        0 0 20px var(--larson-glow),
+        0 0 35px var(--larson-glow);
+    animation: larson_cylon 2s ease-in-out infinite;
+    z-index: 3;
+}
+
+/* Segment thinking */
+.larson_bar.larson_processing.larson_thinking.larson_thinking_style_segment {
+    background-color: rgba(0, 0, 0, 0.8);
+    background-image: linear-gradient(90deg,
+            var(--larson-color-a) 0%, var(--larson-color-b) 45%,
+            var(--larson-color-c) 55%, var(--larson-color-c) 100%);
+    -webkit-mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 7%, rgba(0, 0, 0, 0) 7%, rgba(0, 0, 0, 0) 10%);
+    mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 7%, rgba(0, 0, 0, 0) 7%, rgba(0, 0, 0, 0) 10%);
+    animation: larson_segment 2.67s steps(10) infinite;
+}
+
+/* Glitch thinking */
+.larson_bar.larson_processing.larson_thinking.larson_thinking_style_glitch {
+    background: var(--larson-color-b);
+    animation: larson_glitch 0.67s steps(1) infinite;
+}
+
+/* Liquid thinking */
+.larson_bar.larson_processing.larson_thinking.larson_thinking_style_liquid {
+    background: var(--bar-dark);
+    overflow: hidden;
+    position: relative;
+}
+
+.larson_bar.larson_processing.larson_thinking.larson_thinking_style_liquid::before {
+    display: block !important;
+    content: '';
+    position: absolute;
+    top: -150%;
+    left: -20%;
+    width: 200px;
+    height: 400%;
+    background: radial-gradient(ellipse at center, var(--larson-color-c) 0%, var(--larson-color-c) 25%, var(--larson-color-b) 50%, transparent 70%);
+    opacity: 0.8;
+    animation: larson_liquid_scan 4.67s ease-in-out infinite;
+    border-radius: 50%;
+    filter: blur(1px);
+    z-index: 1;
+}
+
+.larson_bar.larson_processing.larson_thinking.larson_thinking_style_liquid::after {
+    display: block !important;
+    content: '';
+    position: absolute;
+    top: -150%;
+    left: -20%;
+    width: 180px;
+    height: 400%;
+    background: radial-gradient(ellipse at center, var(--larson-color-b) 0%, var(--larson-color-b) 30%, transparent 65%);
+    opacity: 0.7;
+    animation: larson_liquid_scan 4.67s ease-in-out infinite 2.33s;
+    border-radius: 50%;
+    filter: blur(1px);
+    z-index: 1;
+}
+
+/* Convergence thinking */
+.larson_bar.larson_processing.larson_thinking.larson_thinking_style_convergence {
+    background: var(--bar-dark);
+    overflow: hidden;
+    position: relative;
+}
+
+.larson_bar.larson_processing.larson_thinking.larson_thinking_style_convergence::before {
+    display: block !important;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            var(--larson-color-b) 0%,
+            var(--larson-color-b) 60%,
+            var(--larson-color-c) 90%,
+            var(--larson-color-c) 100%);
+    animation: larson_convergence_slide_left 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+    z-index: 1;
+}
+
+.larson_bar.larson_processing.larson_thinking.larson_thinking_style_convergence::after {
+    display: block !important;
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(270deg,
+            var(--larson-color-c) 0%,
+            var(--larson-color-c) 60%,
+            var(--larson-color-b) 90%,
+            var(--larson-color-b) 100%);
+    animation: larson_convergence_slide_right 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+    z-index: 1;
+}
+
+/* Bar height variants */
+.larson_height_compact {
+    height: 3px;
+}
+
+.larson_height_default {
+    height: 4px;
+}
+
+.larson_height_tall {
+    height: 6px;
+}
+
+/* ========================================
+   NEW ANIMATION KEYFRAMES
+   ======================================== */
+
+/* ---- Gradient: smooth continuous flow ---- */
+@keyframes larson_gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 200% 50%;
+    }
+}
+
+.larson_bar.larson_style_gradient.larson_processing:not([class*="larson_thinking_style_"]) {
+    background: linear-gradient(90deg,
+            var(--larson-color-a) 0%, var(--larson-color-a) 12%,
+            var(--larson-color-b) 20%, var(--larson-color-b) 30%,
+            var(--larson-color-c) 40%, var(--larson-color-c) 50%,
+            var(--larson-color-d) 60%, var(--larson-color-d) 70%,
+            var(--larson-color-b) 80%, var(--larson-color-b) 88%,
+            var(--larson-color-a) 92%, var(--larson-color-a) 100%);
+    background-size: 200% 100%;
+    animation: larson_gradient 2s linear infinite;
+}
+
+/* ---- Breathe: opacity + glow pulse ---- */
+@keyframes larson_breathe {
+
+    0%,
+    100% {
+        opacity: 1;
+        box-shadow: 0 0 12px 2px var(--larson-glow);
+    }
+
+    50% {
+        opacity: 0.35;
+        box-shadow: 0 0 4px 0px var(--larson-glow);
+    }
+}
+
+.larson_bar.larson_style_breathe.larson_processing:not([class*="larson_thinking_style_"]) {
+    /* Use Neon (Color B) */
+    background: var(--larson-color-b);
+    animation: larson_breathe 2s ease-in-out infinite;
+}
+
+/* ---- Pulse: color cycling through B, C, D ---- */
+.larson_bar.larson_style_pulse.larson_processing:not([class*="larson_thinking_style_"]) {
+    /* Traveling wave using B, C, D colors */
+    background: linear-gradient(90deg,
+            var(--larson-color-b) 0%,
+            var(--larson-color-c) 25%,
+            var(--larson-color-d) 50%,
+            var(--larson-color-c) 75%,
+            var(--larson-color-b) 100%);
+    background-size: 200% 100%;
+    animation: larson_pulse_wave 2s ease-in-out infinite;
+    box-shadow: 0 0 12px var(--larson-glow);
+}
+
+/* ---- Cylon: scanner effect bouncing left/right ---- */
+@keyframes larson_cylon {
+
+    0%,
+    100% {
+        left: -5%;
+    }
+
+    50% {
+        left: 75%;
+    }
+}
+
+.larson_bar.larson_style_cylon.larson_processing:not([class*="larson_thinking_style_"]) {
+    background: var(--larson-color-a);
+    overflow: hidden;
+}
+
+.larson_bar.larson_style_cylon.larson_processing:not([class*="larson_thinking_style_"])::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            var(--larson-color-b) 25%,
+            var(--larson-color-c) 50%,
+            var(--larson-color-b) 75%,
+            transparent 100%);
+    box-shadow:
+        0 0 8px var(--larson-glow),
+        0 0 20px var(--larson-glow),
+        0 0 35px var(--larson-glow);
+    animation: larson_cylon 1.6s ease-in-out infinite;
+    z-index: 1;
+}
+
+/* ---- Segment: retro battery meter with blocks ---- */
+/* ---- Segment: retro battery meter with blocks ---- */
+@keyframes larson_segment {
+    0% {
+        background-position: 0% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.larson_bar.larson_style_segment.larson_processing:not([class*="larson_thinking_style_"]) {
+    background-color: #000000;
+    /* Gradient background that moves */
+    background-image: linear-gradient(90deg,
+            var(--larson-color-a) 0%, var(--larson-color-b) 40%,
+            var(--larson-color-c) 50%, var(--larson-color-b) 60%,
+            var(--larson-color-a) 100%);
+    background-size: 200% 100%;
+    box-shadow: 0 0 10px var(--larson-glow);
+    /* Create the segment gaps with a mask */
+    -webkit-mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 10px, transparent 10px, transparent 14px);
+    mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 10px, transparent 10px, transparent 14px);
+    animation: larson_segment 1.33s linear infinite;
+}
+
+/* ---- Glitch: subtle pixel corruption effect ---- */
+@keyframes larson_glitch {
+
+    0%,
+    100% {
+        background-color: var(--larson-color-a);
+        transform: translateX(0);
+        filter: brightness(1) contrast(1);
+    }
+
+    12% {
+        background-color: var(--larson-color-b);
+        transform: translateX(1px);
+        filter: brightness(1.2) contrast(1.1);
+    }
+
+    15% {
+        background-color: var(--larson-color-d);
+        transform: translateX(-0.5px);
+        filter: brightness(0.9) contrast(1);
+    }
+
+    28% {
+        background-color: var(--larson-color-b);
+        transform: translateX(0);
+        filter: brightness(1) contrast(1);
+    }
+
+    32% {
+        background-color: var(--larson-color-c);
+        transform: translateX(0.5px);
+        filter: brightness(1.3) contrast(1.05);
+    }
+
+    35% {
+        background-color: var(--larson-color-d);
+        transform: translateX(-1px);
+        filter: brightness(1.1) contrast(1);
+    }
+
+    50% {
+        background-color: var(--larson-color-a);
+        transform: translateX(0);
+        filter: brightness(1) contrast(1);
+    }
+
+    64% {
+        background-color: var(--larson-color-c);
+        transform: translateX(-0.5px);
+        filter: brightness(1.2) contrast(1.08);
+    }
+
+    68% {
+        background-color: var(--larson-color-d);
+        transform: translateX(1px);
+        filter: brightness(0.95) contrast(1);
+    }
+
+    82% {
+        background-color: var(--larson-color-a);
+        transform: translateX(0);
+        filter: brightness(1) contrast(1);
+    }
+
+    88% {
+        background-color: var(--larson-color-c);
+        transform: translateX(0.5px);
+        filter: brightness(1.15) contrast(1.05);
+    }
+
+    92% {
+        background-color: var(--larson-color-b);
+        transform: translateX(-0.5px);
+        filter: brightness(1.05) contrast(1);
+    }
+}
+
+.larson_bar.larson_style_glitch.larson_processing:not([class*="larson_thinking_style_"]) {
+    background: var(--larson-color-b);
+    animation: larson_glitch 2.67s steps(12) infinite;
+    box-shadow: 0 0 8px var(--larson-glow);
+}
+
+/* ---- Liquid: horizontal scanning blobs ---- */
+@keyframes larson_liquid_scan {
+    0% {
+        left: -20%;
+    }
+
+    100% {
+        left: 120%;
+    }
+}
+
+.larson_bar.larson_style_liquid.larson_processing:not([class*="larson_thinking_style_"]) {
+    background: var(--larson-color-a);
+    overflow: hidden;
+    position: relative;
+}
+
+.larson_bar.larson_style_liquid.larson_processing:not([class*="larson_thinking_style_"])::before {
+    content: '';
+    position: absolute;
+    top: -150%;
+    left: -20%;
+    width: 200px;
+    height: 400%;
+    background: radial-gradient(ellipse at center, var(--larson-color-c) 0%, var(--larson-color-c) 25%, var(--larson-color-b) 50%, transparent 70%);
+    opacity: 0.8;
+    animation: larson_liquid_scan 4s ease-in-out infinite;
+    border-radius: 50%;
+    box-shadow: 0 0 20px var(--larson-glow);
+    filter: blur(1px);
+}
+
+.larson_bar.larson_style_liquid.larson_processing:not([class*="larson_thinking_style_"])::after {
+    content: '';
+    position: absolute;
+    top: -150%;
+    left: -20%;
+    width: 180px;
+    height: 400%;
+    background: radial-gradient(ellipse at center, var(--larson-color-b) 0%, var(--larson-color-b) 30%, transparent 65%);
+    opacity: 0.7;
+    animation: larson_liquid_scan 4s ease-in-out infinite 2s;
+    border-radius: 50%;
+    box-shadow: 0 0 15px var(--larson-glow);
+    filter: blur(1px);
+}
+
+/* ---- Convergence: split gradients colliding in center ---- */
+/* ---- Convergence: smooth sliding beams ---- */
+@keyframes larson_convergence_slide_left {
+
+    0%,
+    15% {
+        transform: translateX(-110%);
+        opacity: 0;
+    }
+
+    30%,
+    70% {
+        transform: translateX(0%);
+        opacity: 1;
+    }
+
+    85%,
+    100% {
+        transform: translateX(110%);
+        opacity: 0;
+    }
+}
+
+@keyframes larson_convergence_slide_right {
+
+    0%,
+    15% {
+        transform: translateX(110%);
+        opacity: 0;
+    }
+
+    30%,
+    70% {
+        transform: translateX(0%);
+        opacity: 1;
+    }
+
+    85%,
+    100% {
+        transform: translateX(-110%);
+        opacity: 0;
+    }
+}
+
+@keyframes larson_convergence_flash {
+
+    0%,
+    25%,
+    75%,
+    100% {
+        opacity: 0;
+        transform: scaleX(0.3);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+.larson_bar.larson_style_convergence.larson_processing:not([class*="larson_thinking_style_"]) {
+    background: var(--larson-color-a);
+    overflow: hidden;
+    position: relative;
+}
+
+/* Left Beam */
+.larson_bar.larson_style_convergence.larson_processing:not([class*="larson_thinking_style_"])::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            var(--larson-color-b) 0%,
+            var(--larson-color-b) 60%,
+            var(--larson-color-c) 90%,
+            var(--larson-color-c) 100%);
+    box-shadow: 5px 0 15px var(--larson-glow);
+    animation: larson_convergence_slide_left 3.33s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+/* Right Beam */
+.larson_bar.larson_style_convergence.larson_processing:not([class*="larson_thinking_style_"])::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(270deg,
+            var(--larson-color-c) 0%,
+            var(--larson-color-c) 60%,
+            var(--larson-color-b) 90%,
+            var(--larson-color-b) 100%);
+    box-shadow: -5px 0 15px var(--larson-glow);
+    animation: larson_convergence_slide_right 3.33s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+/* ========================================
+   SPEED MODIFIER CLASSES
+   ======================================== */
+
+/* ------------------------------------------------------------------
+   Thinking Speed (applies when .larson_thinking is present)
+   ------------------------------------------------------------------ */
+/* Slow */
+.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_gradient {
+    animation-duration: 5.33s;
+}
+
+.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_breathe {
+    animation-duration: 5.33s;
+}
+
+.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_pulse {
+    animation-duration: 5.33s;
+}
+
+.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_cylon::after {
+    animation-duration: 3.33s;
+}
+
+.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_segment {
+    animation-duration: 5.33s;
+}
+
+.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_glitch {
+    animation-duration: 6.22s;
+}
+
+.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_liquid::before,
+.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_liquid::after {
+    animation-duration: 8s;
+}
+
+.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_convergence::before,
+.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_convergence::after {
+    animation-duration: 4s;
+}
+
+.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_pulse {
+    animation-duration: 4s;
+}
+
+.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_shimmer {
+    animation-duration: 4s;
+}
+
+/* Normal */
+.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_gradient {
+    animation-duration: 2.67s;
+}
+
+.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_breathe {
+    animation-duration: 2.67s;
+}
+
+.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_pulse {
+    animation-duration: 2.67s;
+}
+
+.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_cylon::after {
+    animation-duration: 1.6s;
+}
+
+.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_segment {
+    animation-duration: 2.67s;
+}
+
+.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_glitch {
+    animation-duration: 4.44s;
+}
+
+.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_liquid::before,
+.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_liquid::after {
+    animation-duration: 4s;
+}
+
+.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_convergence::before,
+.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_convergence::after {
+    animation-duration: 2s;
+}
+
+.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_pulse {
+    animation-duration: 2s;
+}
+
+.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_shimmer {
+    animation-duration: 2s;
+}
+
+/* Fast */
+.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_gradient {
+    animation-duration: 1.33s;
+}
+
+.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_breathe {
+    animation-duration: 1.33s;
+}
+
+.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_pulse {
+    animation-duration: 1.33s;
+}
+
+.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_cylon::after {
+    animation-duration: 0.8s;
+}
+
+.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_segment {
+    animation-duration: 1.33s;
+}
+
+.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_glitch {
+    animation-duration: 2s;
+}
+
+.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_liquid::before,
+.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_liquid::after {
+    animation-duration: 2s;
+}
+
+.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_convergence::before,
+.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_convergence::after {
+    animation-duration: 1s;
+}
+
+.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_pulse {
+    animation-duration: 0.8s;
+}
+
+.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_shimmer {
+    animation-duration: 0.8s;
+}
+
+/* ------------------------------------------------------------------
+   Generation Speed (applies when .larson_processing but NOT thinking)
+   ------------------------------------------------------------------ */
+/* Slow */
+.larson_gen_speed_slow.larson_processing:not([class*="larson_thinking_style_"]).larson_style_gradient {
+    animation-duration: 5.33s;
+}
+
+.larson_gen_speed_slow.larson_processing:not([class*="larson_thinking_style_"]).larson_style_breathe {
+    animation-duration: 5.33s;
+}
+
+.larson_gen_speed_slow.larson_processing:not([class*="larson_thinking_style_"]).larson_style_pulse {
+    animation-duration: 5.33s;
+}
+
+.larson_gen_speed_slow.larson_processing:not([class*="larson_thinking_style_"]).larson_style_cylon::after {
+    animation-duration: 3.33s;
+}
+
+.larson_gen_speed_slow.larson_processing:not([class*="larson_thinking_style_"]).larson_style_segment {
+    animation-duration: 5.33s;
+}
+
+.larson_gen_speed_slow.larson_processing:not([class*="larson_thinking_style_"]).larson_style_glitch {
+    animation-duration: 5.33s;
+}
+
+.larson_gen_speed_slow.larson_processing:not([class*="larson_thinking_style_"]).larson_style_liquid::before,
+.larson_gen_speed_slow.larson_processing:not([class*="larson_thinking_style_"]).larson_style_liquid::after {
+    animation-duration: 6.67s;
+}
+
+.larson_gen_speed_slow.larson_processing:not([class*="larson_thinking_style_"]).larson_style_convergence::before,
+.larson_gen_speed_slow.larson_processing:not([class*="larson_thinking_style_"]).larson_style_convergence::after {
+    animation-duration: 5.33s;
+}
+
+/* Normal */
+.larson_gen_speed_normal.larson_processing:not([class*="larson_thinking_style_"]).larson_style_gradient {
+    animation-duration: 2.67s;
+}
+
+.larson_gen_speed_normal.larson_processing:not([class*="larson_thinking_style_"]).larson_style_breathe {
+    animation-duration: 2.67s;
+}
+
+.larson_gen_speed_normal.larson_processing:not([class*="larson_thinking_style_"]).larson_style_pulse {
+    animation-duration: 2.67s;
+}
+
+.larson_gen_speed_normal.larson_processing:not([class*="larson_thinking_style_"]).larson_style_cylon::after {
+    animation-duration: 1.6s;
+}
+
+.larson_gen_speed_normal.larson_processing:not([class*="larson_thinking_style_"]).larson_style_segment {
+    animation-duration: 2.67s;
+}
+
+.larson_gen_speed_normal.larson_processing:not([class*="larson_thinking_style_"]).larson_style_glitch {
+    animation-duration: 3.56s;
+}
+
+.larson_gen_speed_normal.larson_processing:not([class*="larson_thinking_style_"]).larson_style_liquid::before,
+.larson_gen_speed_normal.larson_processing:not([class*="larson_thinking_style_"]).larson_style_liquid::after {
+    animation-duration: 4s;
+}
+
+.larson_gen_speed_normal.larson_processing:not([class*="larson_thinking_style_"]).larson_style_convergence::before,
+.larson_gen_speed_normal.larson_processing:not([class*="larson_thinking_style_"]).larson_style_convergence::after {
+    animation-duration: 3.33s;
+}
+
+/* Fast */
+.larson_gen_speed_fast.larson_processing:not([class*="larson_thinking_style_"]).larson_style_gradient {
+    animation-duration: 1.33s;
+}
+
+.larson_gen_speed_fast.larson_processing:not([class*="larson_thinking_style_"]).larson_style_breathe {
+    animation-duration: 1.33s;
+}
+
+.larson_gen_speed_fast.larson_processing:not([class*="larson_thinking_style_"]).larson_style_pulse {
+    animation-duration: 1.33s;
+}
+
+.larson_gen_speed_fast.larson_processing:not([class*="larson_thinking_style_"]).larson_style_cylon::after {
+    animation-duration: 0.8s;
+}
+
+.larson_gen_speed_fast.larson_processing:not([class*="larson_thinking_style_"]).larson_style_segment {
+    animation-duration: 1.33s;
+}
+
+.larson_gen_speed_fast.larson_processing:not([class*="larson_thinking_style_"]).larson_style_glitch {
+    animation-duration: 2.13s;
+}
+
+.larson_gen_speed_fast.larson_processing:not([class*="larson_thinking_style_"]).larson_style_liquid::before,
+.larson_gen_speed_fast.larson_processing:not([class*="larson_thinking_style_"]).larson_style_liquid::after {
+    animation-duration: 2s;
+}
+
+.larson_gen_speed_fast.larson_processing:not([class*="larson_thinking_style_"]).larson_style_convergence::before,
+.larson_gen_speed_fast.larson_processing:not([class*="larson_thinking_style_"]).larson_style_convergence::after {
+    animation-duration: 2s;
+}
+
+/* ------------------------------------------------------------------
+   Idle Speed (applies when NOT processing and NOT thinking)
+   ------------------------------------------------------------------ */
+/* Slow */
+.larson_idle_speed_slow:not(.larson_processing).larson_idle_style_gradient {
+    animation-duration: 5.33s;
+}
+
+.larson_idle_speed_slow:not(.larson_processing).larson_idle_style_breathe {
+    animation-duration: 5.33s;
+}
+
+.larson_idle_speed_slow:not(.larson_processing).larson_idle_style_pulse {
+    animation-duration: 5.33s;
+}
+
+.larson_idle_speed_slow:not(.larson_processing).larson_idle_style_cylon::after {
+    animation-duration: 3.33s;
+}
+
+.larson_idle_speed_slow:not(.larson_processing).larson_idle_style_segment {
+    animation-duration: 5.33s;
+}
+
+.larson_idle_speed_slow:not(.larson_processing).larson_idle_style_glitch {
+    animation-duration: 5.33s;
+}
+
+.larson_idle_speed_slow:not(.larson_processing).larson_idle_style_liquid::before,
+.larson_idle_speed_slow:not(.larson_processing).larson_idle_style_liquid::after {
+    animation-duration: 8s;
+}
+
+.larson_idle_speed_slow:not(.larson_processing).larson_idle_style_convergence::before,
+.larson_idle_speed_slow:not(.larson_processing).larson_idle_style_convergence::after {
+    animation-duration: 4s;
+}
+
+.larson_idle_speed_slow:not(.larson_processing).larson_idle_style_pulse {
+    animation-duration: 4s;
+}
+
+.larson_idle_speed_slow:not(.larson_processing).larson_idle_style_shimmer {
+    animation-duration: 4s;
+}
+
+/* Normal */
+.larson_idle_speed_normal:not(.larson_processing).larson_idle_style_gradient {
+    animation-duration: 2.67s;
+}
+
+.larson_idle_speed_normal:not(.larson_processing).larson_idle_style_breathe {
+    animation-duration: 2.67s;
+}
+
+.larson_idle_speed_normal:not(.larson_processing).larson_idle_style_pulse {
+    animation-duration: 2.67s;
+}
+
+.larson_idle_speed_normal:not(.larson_processing).larson_idle_style_cylon::after {
+    animation-duration: 1.6s;
+}
+
+.larson_idle_speed_normal:not(.larson_processing).larson_idle_style_segment {
+    animation-duration: 2.67s;
+}
+
+.larson_idle_speed_normal:not(.larson_processing).larson_idle_style_glitch {
+    animation-duration: 4.44s;
+}
+
+.larson_idle_speed_normal:not(.larson_processing).larson_idle_style_liquid::before,
+.larson_idle_speed_normal:not(.larson_processing).larson_idle_style_liquid::after {
+    animation-duration: 4s;
+}
+
+.larson_idle_speed_normal:not(.larson_processing).larson_idle_style_convergence::before,
+.larson_idle_speed_normal:not(.larson_processing).larson_idle_style_convergence::after {
+    animation-duration: 2s;
+}
+
+.larson_idle_speed_normal:not(.larson_processing).larson_idle_style_pulse {
+    animation-duration: 2s;
+}
+
+.larson_idle_speed_normal:not(.larson_processing).larson_idle_style_shimmer {
+    animation-duration: 2s;
+}
+
+/* Fast */
+.larson_idle_speed_fast:not(.larson_processing).larson_idle_style_gradient {
+    animation-duration: 1.33s;
+}
+
+.larson_idle_speed_fast:not(.larson_processing).larson_idle_style_breathe {
+    animation-duration: 1.33s;
+}
+
+.larson_idle_speed_fast:not(.larson_processing).larson_idle_style_pulse {
+    animation-duration: 1.33s;
+}
+
+.larson_idle_speed_fast:not(.larson_processing).larson_idle_style_cylon::after {
+    animation-duration: 0.8s;
+}
+
+.larson_idle_speed_fast:not(.larson_processing).larson_idle_style_segment {
+    animation-duration: 1.33s;
+}
+
+.larson_idle_speed_fast:not(.larson_processing).larson_idle_style_glitch {
+    animation-duration: 1.6s;
+}
+
+.larson_idle_speed_fast:not(.larson_processing).larson_idle_style_liquid::before,
+.larson_idle_speed_fast:not(.larson_processing).larson_idle_style_liquid::after {
+    animation-duration: 2s;
+}
+
+.larson_idle_speed_fast:not(.larson_processing).larson_idle_style_convergence::before,
+.larson_idle_speed_fast:not(.larson_processing).larson_idle_style_convergence::after {
+    animation-duration: 1s;
+}
+
+.larson_idle_speed_fast:not(.larson_processing).larson_idle_style_pulse {
+    animation-duration: 0.8s;
+}
+
+.larson_idle_speed_fast:not(.larson_processing).larson_idle_style_shimmer {
+    animation-duration: 0.8s;
+}
+
+/* ---- Hover preview bar (mini bar in theme swatch) - reuses same animations ---- */
+/* Gradient preview */
+/* Gradient preview */
+.larson_theme_preview_bar.larson_preview_animating.larson_style_gradient {
+    /* Define pop variables locally for preview context */
+    --bar-bright: color-mix(in srgb, var(--larson-color-c) 70%, white);
+    --bar-dark: color-mix(in srgb, var(--larson-color-a) 55%, black);
+
+    background: linear-gradient(90deg,
+            var(--larson-color-a) 0%, var(--larson-color-a) 12%,
+            var(--larson-color-b) 20%, var(--larson-color-b) 30%,
+            var(--larson-color-c) 40%, var(--larson-color-c) 50%,
+            var(--larson-color-d) 60%, var(--larson-color-d) 70%,
+            var(--larson-color-b) 80%, var(--larson-color-b) 88%,
+            var(--larson-color-a) 92%, var(--larson-color-a) 100%);
+    background-size: 200% 100%;
+    animation: larson_gradient 2s linear infinite;
+}
+
+/* Breathe preview */
+.larson_theme_preview_bar.larson_preview_animating.larson_style_breathe {
+    /* Define pop variables locally for preview context */
+    --bar-bright: color-mix(in srgb, var(--larson-color-c) 70%, white);
+    --bar-dark: color-mix(in srgb, var(--larson-color-a) 55%, black);
+
+    background: var(--larson-color-b);
+    animation: larson_breathe 2s ease-in-out infinite;
+}
+
+/* Pulse preview */
+.larson_theme_preview_bar.larson_preview_animating.larson_style_pulse {
+    background: linear-gradient(90deg,
+            var(--larson-color-b) 0%,
+            var(--larson-color-c) 25%,
+            var(--larson-color-d) 50%,
+            var(--larson-color-c) 75%,
+            var(--larson-color-b) 100%);
+    background-size: 200% 100%;
+    animation: larson_pulse_wave 2s ease-in-out infinite;
+    box-shadow: 0 0 12px var(--larson-glow);
+}
+
+/* Cylon preview */
+.larson_theme_preview_bar.larson_preview_animating.larson_style_cylon {
+    /* Define pop variables locally for preview context */
+    --bar-bright: color-mix(in srgb, var(--larson-color-c) 70%, white);
+    --bar-dark: color-mix(in srgb, var(--larson-color-a) 55%, black);
+
+    background: var(--larson-color-a);
+    overflow: hidden;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_style_cylon::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            var(--larson-color-b) 25%,
+            var(--larson-color-c) 50%,
+            var(--larson-color-b) 75%,
+            transparent 100%);
+    box-shadow:
+        0 0 8px var(--larson-glow),
+        0 0 20px var(--larson-glow),
+        0 0 35px var(--larson-glow);
+    animation: larson_cylon 1.2s ease-in-out infinite;
+}
+
+/* Segment preview */
+.larson_theme_preview_bar.larson_preview_animating.larson_style_segment {
+    /* Define pop variables locally for preview context */
+    --bar-bright: color-mix(in srgb, var(--larson-color-c) 70%, white);
+    --bar-dark: color-mix(in srgb, var(--larson-color-a) 55%, black);
+
+    background-color: #000000;
+    background-image: linear-gradient(90deg,
+            var(--larson-color-a) 0%, var(--larson-color-b) 40%,
+            var(--larson-color-c) 50%, var(--larson-color-b) 60%,
+            var(--larson-color-a) 100%);
+    background-size: 200% 100%;
+    -webkit-mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 10px, transparent 10px, transparent 14px);
+    mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 10px, transparent 10px, transparent 14px);
+    animation: larson_segment 2s linear infinite;
+}
+
+/* Glitch preview */
+/* Glitch preview */
+.larson_theme_preview_bar.larson_preview_animating.larson_style_glitch {
+    /* Define pop variables locally for preview context */
+    --bar-bright: color-mix(in srgb, var(--larson-color-c) 70%, white);
+    --bar-dark: color-mix(in srgb, var(--larson-color-a) 55%, black);
+
+    background: var(--larson-color-b);
+    animation: larson_glitch 2.5s steps(12) infinite;
+}
+
+/* Liquid preview */
+/* Liquid preview */
+/* Liquid preview - wave animations */
+@keyframes larson_liquid_wave {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    25% {
+        transform: translateY(-10%) rotate(5deg);
+    }
+
+    50% {
+        transform: translateY(-5%) rotate(-3deg);
+    }
+
+    75% {
+        transform: translateY(-15%) rotate(7deg);
+    }
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_style_liquid {
+    /* Define pop variables locally for preview context */
+    --bar-bright: color-mix(in srgb, var(--larson-color-c) 70%, white);
+    --bar-dark: color-mix(in srgb, var(--larson-color-a) 55%, black);
+
+    background: var(--larson-color-b);
+    overflow: hidden;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_style_liquid::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -10%;
+    width: 120%;
+    height: 200%;
+    background: radial-gradient(ellipse at center, var(--larson-color-c) 0%, var(--larson-color-c) 15%, transparent 50%);
+    opacity: 0.9;
+    animation: larson_liquid_wave 3s ease-in-out infinite;
+    border-radius: 40%;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_style_liquid::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -10%;
+    width: 120%;
+    height: 200%;
+    background: radial-gradient(ellipse at center, var(--larson-color-b) 0%, var(--larson-color-b) 15%, transparent 50%);
+    opacity: 0.9;
+    animation: larson_liquid_wave 3s ease-in-out infinite 0.8s;
+    border-radius: 40%;
+}
+
+/* Convergence preview */
+/* Convergence preview - sliding beam animations */
+@keyframes larson_convergence_left {
+
+    0%,
+    100% {
+        transform: translateX(-100%);
+    }
+
+    50% {
+        transform: translateX(40%);
+    }
+}
+
+@keyframes larson_convergence_right {
+
+    0%,
+    100% {
+        transform: translateX(100%);
+    }
+
+    50% {
+        transform: translateX(-40%);
+    }
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_style_convergence {
+    /* Define pop variables locally for preview context */
+    --bar-bright: color-mix(in srgb, var(--larson-color-c) 70%, white);
+    --bar-dark: color-mix(in srgb, var(--larson-color-a) 55%, black);
+
+    background: var(--larson-color-b);
+    overflow: hidden;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_style_convergence::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--larson-color-b) 0%, var(--larson-color-b) 30%, var(--larson-color-c) 100%);
+    animation: larson_convergence_left 1.5s ease-in-out infinite;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_style_convergence::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(270deg, var(--larson-color-c) 0%, var(--larson-color-c) 30%, var(--larson-color-b) 100%);
+    animation: larson_convergence_right 1.5s ease-in-out infinite;
+}
+
+/* Preview bar speed modifiers */
+/* Slow */
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_slow.larson_style_gradient {
+    animation-duration: 5.33s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_slow.larson_style_breathe {
+    animation-duration: 5.33s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_slow.larson_style_cylon::after {
+    animation-duration: 3.33s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_slow.larson_style_segment {
+    animation-duration: 5.33s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_slow.larson_style_glitch {
+    animation-duration: 5.33s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_slow.larson_style_liquid::before,
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_slow.larson_style_liquid::after {
+    animation-duration: 8s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_slow.larson_style_convergence::before,
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_slow.larson_style_convergence::after {
+    animation-duration: 4s;
+}
+
+/* Normal */
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_normal.larson_style_gradient {
+    animation-duration: 2.67s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_normal.larson_style_breathe {
+    animation-duration: 2.67s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_normal.larson_style_cylon::after {
+    animation-duration: 1.6s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_normal.larson_style_segment {
+    animation-duration: 2.67s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_normal.larson_style_glitch {
+    animation-duration: 3.33s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_normal.larson_style_liquid::before,
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_normal.larson_style_liquid::after {
+    animation-duration: 4s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_normal.larson_style_convergence::before,
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_normal.larson_style_convergence::after {
+    animation-duration: 2s;
+}
+
+/* Fast */
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_fast.larson_style_gradient {
+    animation-duration: 1.33s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_fast.larson_style_breathe {
+    animation-duration: 1.33s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_fast.larson_style_cylon::after {
+    animation-duration: 0.8s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_fast.larson_style_segment {
+    animation-duration: 1.33s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_fast.larson_style_glitch {
+    animation-duration: 2s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_fast.larson_style_liquid::before,
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_fast.larson_style_liquid::after {
+    animation-duration: 2s;
+}
+
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_fast.larson_style_convergence::before,
+.larson_theme_preview_bar.larson_preview_animating.larson_speed_fast.larson_style_convergence::after {
+    animation-duration: 1s;
+}
+
+/* ---- Options modal: overlay (backdrop) + panel (positioned above bar) ---- */
+.larson_options_overlay {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100005;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    touch-action: manipulation;
+}
+
+@media (max-width: 768px) {
+    .larson_options_overlay {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 16px !important;
+    }
+}
+
+.larson_options_overlay_open {
+    pointer-events: auto;
+    opacity: 1;
+    visibility: visible;
+    background: rgba(0, 0, 0, 0.4);
+    transition: opacity 0.25s ease, background 0.2s ease;
+}
+
+.larson_options_overlay_open .larson_dropdown {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition-delay: 0.05s;
+}
+
+/* Panel: fixed position, placed above bar via JS (left/bottom) */
+/* ---- Header (Sticky) ---- */
+.larson_modal_header_easteregg {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    /* Use theme color if available, fallback to dark */
+    background: var(--SmartThemeBlurTintColor, rgba(20, 20, 20, 0.95));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    margin: -16px -16px 16px -16px;
+    padding: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.larson_modal_title {
+    margin: 0;
+    padding: 0;
+    font-size: 1.25em;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--larson-color-a);
+    text-shadow: 0 0 10px var(--larson-glow);
+    position: relative;
+    cursor: help;
+    display: inline-block;
+}
+
+.larson_modal_close_btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    font-size: 1.25em;
+    border-radius: 50%;
+    color: var(--SmartThemeBodyColor, #fff);
+}
+
+.larson_modal_close_btn:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Wrappers for desktop layout preservation */
+.larson_grid_group_wrapper {
+    display: contents;
+}
+
+.larson_dropdown {
+    position: fixed;
+    z-index: 100006;
+    /* Lift above overlay */
+    display: flex;
+    flex-direction: row;
+    width: var(--sheldWidth, 50vw);
+    min-width: 420px;
+    max-width: calc(100vw - 24px);
+    background: #151515;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    overflow: visible;
+    pointer-events: auto;
+
+    /* Animation state - transition instead of keyframes for better mobile support */
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+    transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+
+/* Debug mode - uncomment to see where dropdown is positioned */
+/*
+.larson_dropdown {
+    border: 3px solid red !important;
+    background: rgba(255, 0, 0, 0.3) !important;
+}
+.larson_options_overlay {
+    background: rgba(0, 255, 0, 0.3) !important;
+}
+*/
+
+.larson_dropdown_pane {
+    flex: 1;
+    padding: 16px 18px;
+    min-width: 0;
+}
+
+.larson_dropdown_pane_left {
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.larson_dropdown_title {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--larson-header-muted);
+    margin-bottom: 12px;
+}
+
+.larson_dropdown_row {
+    margin-bottom: 12px;
+}
+
+.larson_dropdown_row:last-child {
+    margin-bottom: 0;
+}
+
+.larson_dropdown_row_check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.larson_dropdown_row_check .larson_dropdown_label {
+    margin-bottom: 0;
+}
+
+/* iOS-style toggle switches */
+.larson_toggle_switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.larson_toggle_switch input[type="checkbox"] {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.larson_toggle_slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    transition: 0.3s;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.larson_toggle_slider:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.larson_toggle_slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.larson_toggle_switch input:checked+.larson_toggle_slider {
+    background-color: var(--larson-accent);
+    border-color: var(--larson-accent);
+}
+
+.larson_toggle_switch input:checked+.larson_toggle_slider:hover {
+    background-color: color-mix(in srgb, var(--larson-accent) 85%, white);
+}
+
+.larson_toggle_switch input:checked+.larson_toggle_slider:before {
+    transform: translateX(20px);
+}
+
+.larson_toggle_switch input:disabled+.larson_toggle_slider {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.larson_dd_checkbox {
+    accent-color: var(--larson-accent);
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.larson_dropdown_label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--larson-text-muted);
+    margin-bottom: 6px;
+}
+
+.larson_dropdown_select {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    background: var(--larson-input-bg);
+    border: 1px solid var(--larson-input-border);
+    border-radius: 10px;
+    color: var(--larson-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.larson_dropdown_select:hover {
+    background: rgba(255, 255, 255, 0.1);
+    filter: brightness(1.05);
+}
+
+.larson_dropdown_select:focus {
+    outline: none;
+    border-color: var(--larson-accent);
+}
+
+/* Theme swatches: wide rows with name + triadic gradient/segmented bar */
+.larson_theme_grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.larson_theme_swatch_row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    background: rgba(255, 255, 255, 0.12);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    color: var(--larson-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.larson_theme_swatch_row:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--larson-accent);
+}
+
+.larson_theme_swatch_row.larson_theme_active {
+    border-color: var(--larson-accent);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--larson-accent) 60%, transparent), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--larson-accent) 22%, transparent);
+    position: relative;
+}
+
+/* Removed checkmark icon - selected theme indicated by glow only */
+
+/* Triadic bar: 3 segments or gradient */
+.larson_theme_triadic_bar {
+    flex: 1;
+    min-width: 0;
+    height: 24px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+}
+
+.larson_theme_triadic_bar_segmented {
+    display: flex;
+    width: 100%;
+}
+
+.larson_theme_triadic_bar_segmented span {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Live preview mini-bar inside swatch (animates on hover) */
+.larson_theme_preview_bar {
+    flex: 1;
+    min-width: 0;
+    height: 18px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    position: relative;
+    background: var(--larson-color-a, #7c3aed);
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0);
+}
+
+.larson_theme_swatch_row:hover .larson_theme_preview_bar.larson_preview_animating,
+.larson_theme_preview_bar.larson_preview_animating {
+    box-shadow: 0 0 8px var(--larson-glow, rgba(124, 58, 237, 0.5));
+}
+
+.larson_theme_swatch_name {
+    flex-shrink: 0;
+    width: 90px;
+    font-weight: 500;
+}
+
+/* Custom theme row (single custom color inputs) - legacy / inline custom */
+.larson_theme_custom_row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.larson_theme_custom_row input[type="color"] {
+    width: 36px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--larson-input-border);
+    border-radius: 8px;
+    cursor: pointer;
+    background: var(--larson-input-bg);
+    transition: all 0.2s ease;
+}
+
+.larson_theme_custom_row input[type="color"]:hover {
+    filter: brightness(1.1);
+}
+
+.larson_theme_custom_row input[type="text"] {
+    width: 72px;
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    background: var(--larson-input-bg);
+    border: 1px solid var(--larson-input-border);
+    border-radius: 8px;
+    color: var(--larson-text);
+    transition: all 0.2s ease;
+}
+
+.larson_theme_custom_row input[type="text"]:focus {
+    outline: none;
+    border-color: var(--larson-accent);
+}
+
+/* ---- Custom Themes section (create / edit / delete) ---- */
+.larson_custom_themes_section {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.larson_custom_themes_title {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--larson-header-muted);
+    margin-bottom: 10px;
+}
+
+.larson_custom_themes_list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.larson_custom_theme_item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--larson-input-bg);
+    border: 1px solid var(--larson-input-border);
+    border-radius: 10px;
+}
+
+.larson_custom_theme_item_bar {
+    flex: 1;
+    min-width: 0;
+    height: 20px;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+}
+
+.larson_custom_theme_item_bar span {
+    flex: 1;
+}
+
+.larson_custom_theme_item_name {
+    flex-shrink: 0;
+    width: 80px;
+    font-size: 0.8rem;
+    color: var(--larson-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.larson_custom_theme_item_actions {
+    display: flex;
+    gap: 4px;
+}
+
+.larson_custom_theme_btn_sm {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--larson-input-border);
+    border-radius: 6px;
+    color: var(--larson-text-muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.larson_custom_theme_btn_sm:hover {
+    border-color: var(--larson-accent);
+    color: var(--larson-accent);
+}
+
+.larson_custom_theme_btn_sm.larson_btn_delete:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.larson_add_theme_btn {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    background: color-mix(in srgb, var(--larson-accent) 20%, transparent);
+    border: 1px dashed var(--larson-accent);
+    border-radius: 10px;
+    color: var(--larson-accent);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    z-index: 10;
+}
+
+.larson_add_theme_btn:hover {
+    background: color-mix(in srgb, var(--larson-accent) 30%, transparent);
+    border-style: solid;
+}
+
+.larson_add_theme_btn:active {
+    transform: scale(0.98);
+    background: color-mix(in srgb, var(--larson-accent) 35%, transparent);
+}
+
+/* Sub-modal for add/edit custom theme */
+.larson_theme_modal_overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100015;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+}
+
+.larson_theme_modal_overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.larson_theme_modal {
+    background: #1a1a1a;
+    border: 1px solid var(--larson-input-border);
+    border-radius: 12px;
+    padding: 20px;
+    min-width: 320px;
+    max-width: 400px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.larson_theme_modal_title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #fff;
+    margin-bottom: 16px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-align: center;
+    /* Clean Neon Effect */
+    text-shadow:
+        0 0 5px var(--larson-accent),
+        0 0 10px var(--larson-accent),
+        0 0 20px var(--larson-glow);
+}
+
+.larson_theme_modal_row {
+    margin-bottom: 12px;
+}
+
+.larson_theme_modal_row label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--larson-text-muted);
+    margin-bottom: 4px;
+}
+
+.larson_theme_modal_select {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    background: var(--larson-input-bg);
+    border: 1px solid var(--larson-input-border);
+    border-radius: 8px;
+    color: var(--larson-text);
+    cursor: pointer;
+}
+
+.larson_harmony_preview_swatches {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.larson_harmony_swatch {
+    flex: 1;
+    height: 32px;
+    min-width: 0;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: transform 0.15s ease;
+}
+
+.larson_harmony_swatch:hover {
+    transform: scale(1.05);
+}
+
+.larson_theme_modal_row input[type="text"] {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    background: var(--larson-input-bg);
+    border: 1px solid var(--larson-input-border);
+    border-radius: 8px;
+    color: var(--larson-text);
+}
+
+.larson_theme_modal_colors {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.larson_theme_modal_colors input[type="color"] {
+    width: 40px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid var(--larson-input-border);
+    border-radius: 8px;
+    cursor: pointer;
+    background: var(--larson-input-bg);
+}
+
+.larson_theme_modal_colors input[type="text"].larson_hex_input {
+    width: 72px;
+    padding: 6px 8px;
+    font-size: 0.8rem;
+    background: var(--larson-input-bg);
+    border: 1px solid var(--larson-input-border);
+    border-radius: 6px;
+    color: var(--larson-text);
+}
+
+.larson_theme_modal_actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.larson_theme_modal_actions button {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.larson_theme_modal_actions .larson_modal_primary {
+    background: transparent;
+    border: 2px solid var(--larson-accent);
+    color: var(--larson-text);
+}
+
+.larson_theme_modal_actions .larson_modal_secondary {
+    background: transparent;
+    border: 1px solid var(--larson-input-border);
+    color: var(--larson-text);
+}
+
+/* Extension panel (settings.html in Manage Extensions) */
+.larson_settings_header {
+    color: var(--SmartThemeBodyColor, #ccc);
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.larson_divider {
+    border: none;
+    border-top: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.1));
+    margin: 12px 0;
+}
+
+.larson_section_title {
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    color: var(--SmartThemeBodyColor, #e5e7eb);
+}
+
+.larson_setting_row {
+    margin-bottom: 10px;
+}
+
+.larson_setting_label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--SmartThemeBodyColor, #aaa);
+    margin-bottom: 4px;
+}
+
+.larson_select {
+    width: 100%;
+    max-width: 280px;
+}
+
+.larson_custom_inputs {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.larson_custom_inputs input[type="color"] {
+    width: 36px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.2));
+    border-radius: 6px;
+    cursor: pointer;
+    background: transparent;
+}
+
+.larson_custom_inputs input[type="text"] {
+    width: 80px;
+    padding: 6px 8px;
+    font-size: 0.8rem;
+}
+
+/* Settings panel: custom themes list */
+.larson_section_hint {
+    font-size: 0.8rem;
+    color: var(--larson-text-muted);
+    margin-bottom: 10px;
+}
+
+.larson_custom_themes_list_settings {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.larson_custom_theme_item_settings {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--larson-input-bg, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--larson-input-border);
+    border-radius: 8px;
+}
+
+.larson_custom_theme_item_settings .larson_mini_bar {
+    flex: 1;
+    height: 18px;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+}
+
+.larson_custom_theme_item_settings .larson_mini_bar span {
+    flex: 1;
+}
+
+.larson_add_theme_btn_settings {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    border: 1px dashed var(--larson-accent);
+    border-radius: 8px;
+    color: var(--larson-accent);
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    z-index: 10;
+}
+
+.larson_add_theme_btn_settings:hover {
+    background: color-mix(in srgb, var(--larson-accent) 15%, transparent);
+}
+
+.larson_add_theme_btn_settings:active {
+    transform: scale(0.98);
+    background: color-mix(in srgb, var(--larson-accent) 25%, transparent);
+}
+
+/* ============================================================
+   Hide When Idle - Makes bar completely transparent when idle
+   ============================================================ */
+.larson_bar.larson_hide_idle:not(.larson_processing):not(.larson_thinking) {
+    opacity: 0 !important;
+    pointer-events: none;
+}
+
+/* ============================================================
+   Settings Modal - Refactored Layout
+   ============================================================ */
+
+/* Larson Header with Easter Egg Tooltip */
+.larson_header_easteregg {
+    position: relative;
+    margin: 16px 0 20px 0;
+    text-align: center;
+}
+
+.larson_main_title {
+    position: relative;
+    display: inline-block;
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-family: 'Courier New', Consolas, monospace;
+    color: var(--larson-accent);
+    cursor: default;
+    margin: 0;
+    padding: 8px 16px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    /* Segmented LED scanner effect */
+    text-shadow:
+        0 0 4px var(--larson-accent),
+        0 0 8px var(--larson-accent),
+        0 0 12px var(--larson-glow),
+        1px 0 0 rgba(0, 0, 0, 0.8),
+        -1px 0 0 rgba(0, 0, 0, 0.8);
+    filter: drop-shadow(0 0 10px var(--larson-glow));
+}
+
+.larson_main_title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: var(--larson-accent);
+    box-shadow: 0 0 4px var(--larson-glow);
+    transition: width 0.3s ease 0.3s;
+}
+
+.larson_main_title:hover::after {
+    width: 80%;
+}
+
+.larson_tooltip {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--larson-panel-glass, rgba(20, 20, 25, 0.95));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--larson-border, rgba(124, 58, 237, 0.3));
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-size: 0.85rem;
+    font-weight: 400;
+    font-family: -apple-system, system-ui, sans-serif;
+    letter-spacing: normal;
+    text-transform: none;
+    color: var(--larson-text, #e5e7eb);
+    white-space: normal;
+    max-width: 380px;
+    line-height: 1.6;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    z-index: 10000;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    text-align: center;
+    text-shadow: none;
+    filter: none;
+}
+
+.larson_main_title:hover .larson_tooltip {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0.6s;
+}
+
+/* 3-Column Grid Container */
+.larson_grid_container {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    gap: 12px 16px;
+    align-items: center;
+    background: var(--larson-input-bg);
+    border: 1px solid var(--larson-border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+/* Grid Headers */
+.larson_grid_header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--larson-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: center;
+}
+
+.larson_grid_header.larson_grid_col_label {
+    /* Empty header for label column */
+    grid-column: 1;
+}
+
+.larson_grid_header.larson_grid_col_animation {
+    grid-column: 2;
+}
+
+.larson_grid_header.larson_grid_col_speed {
+    grid-column: 3;
+}
+
+/* Grid Labels (first column) */
+.larson_grid_label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--larson-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.larson_grid_label i {
+    color: var(--larson-accent);
+    width: 16px;
+    text-align: center;
+}
+
+/* Grid Checkboxes in Labels */
+.larson_grid_checkbox {
+    margin: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.larson_grid_checkbox input[type="checkbox"] {
+    margin: 0;
+}
+
+.larson_grid_checkbox>span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--larson-text);
+    flex: 1;
+}
+
+/* Grid Controls (columns 2 and 3) */
+.larson_grid_control {
+    display: flex;
+    align-items: center;
+}
+
+.larson_grid_control select {
+    width: 100%;
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--larson-input-border);
+    border-radius: 8px;
+    color: var(--larson-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.larson_grid_control select:hover:not(:disabled) {
+    border-color: var(--larson-accent);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.larson_grid_control select:focus {
+    outline: none;
+    border-color: var(--larson-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--larson-accent) 20%, transparent);
+}
+
+.larson_grid_control select:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Warning Message */
+.larson_warning {
+    background: color-mix(in srgb, #ff9800 15%, transparent);
+    border-left: 3px solid #ff9800;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 0.85rem;
+    color: var(--larson-text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.larson_warning i {
+    color: #ff9800;
+    font-size: 1rem;
+}
+
+/* Thinking warning note - part of Thinking section */
+.larson_thinking_note {
+    grid-column: 1 / -1;
+    margin: 0 0 12px 0;
+    font-size: 0.8rem;
+    padding: 10px 14px;
+}
+
+/* Global Settings Section */
+.larson_global_settings {
+    background: var(--larson-input-bg);
+    border: 1px solid var(--larson-border);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.larson_global_settings .larson_section_title {
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+.larson_global_settings .larson_setting_row {
+    margin-bottom: 14px;
+}
+
+.larson_global_settings .larson_setting_row:last-child {
+    margin-bottom: 0;
+}
+
+.larson_global_settings .larson_setting_label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--larson-text);
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.larson_global_settings .larson_setting_label i {
+    color: var(--larson-accent);
+    width: 16px;
+    text-align: center;
+}
+
+.larson_global_settings select {
+    width: 100%;
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--larson-input-border);
+    border-radius: 8px;
+    color: var(--larson-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.larson_global_settings select:hover {
+    border-color: var(--larson-accent);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.larson_global_settings select:focus {
+    outline: none;
+    border-color: var(--larson-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--larson-accent) 20%, transparent);
+}
+
+/* Improved spacing for toggle row */
+.larson_toggle_row {
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    background: var(--larson-input-bg);
+    border-radius: 8px;
+    transition: background 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.larson_toggle_row:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.larson_toggle_label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    flex: 1;
+}
+
+.larson_toggle_label i {
+    color: var(--larson-accent);
+    width: 18px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+/* Checkbox label wrapper - for toggle rows */
+/* Checkbox labels - scoped to Larson settings only */
+.larson_settings .checkbox_label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    margin: 0;
+}
+
+.larson_settings .checkbox_label:hover .larson_toggle_label {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* ============================================================
+   Dropdown Modal - Refactored Layout
+   ============================================================ */
+
+/* Compact Larson Header with Easter Egg for Modal */
+.larson_modal_header_easteregg {
+    margin: 0 0 16px 0;
+    text-align: center;
+}
+
+.larson_modal_title {
+    position: relative;
+    display: inline-block;
+    font-size: 1.3rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--larson-accent), var(--larson-accent-hover));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    cursor: default;
+    margin: 0;
+    padding: 4px 12px;
+    letter-spacing: 0.05em;
+}
+
+.larson_modal_title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: var(--larson-accent);
+    transition: width 0.3s ease 0.3s;
+}
+
+.larson_modal_title:hover::after {
+    width: 80%;
+}
+
+.larson_modal_tooltip {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-6px);
+    background: #1a1a1a;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: #ffffff;
+    white-space: normal;
+    max-width: 280px;
+    width: max-content;
+    line-height: 1.4;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    text-align: left;
+}
+
+.larson_modal_tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-bottom-color: #1a1a1a;
+}
+
+.larson_modal_title:hover .larson_modal_tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    transition-delay: 0.5s;
+}
+
+/* 3-Column Grid Container for Modal */
+.larson_modal_grid_container {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    gap: 10px 12px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--larson-border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+}
+
+/* Grid Headers for Modal */
+.larson_modal_grid_header {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--larson-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: center;
+}
+
+.larson_modal_grid_header.larson_modal_grid_col_label {
+    grid-column: 1;
+}
+
+.larson_modal_grid_header.larson_modal_grid_col_animation {
+    grid-column: 2;
+}
+
+.larson_modal_grid_header.larson_modal_grid_col_speed {
+    grid-column: 3;
+}
+
+/* Grid Labels for Modal */
+.larson_modal_grid_label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--larson-text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.larson_modal_grid_label i {
+    color: var(--larson-accent);
+    width: 14px;
+    text-align: center;
+    font-size: 0.85rem;
+}
+
+/* Grid Checkboxes in Labels for Modal */
+.larson_modal_grid_checkbox_wrapper {
+    margin: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.larson_modal_grid_checkbox_wrapper input[type="checkbox"] {
+    margin: 0;
+}
+
+.larson_modal_grid_checkbox_wrapper>span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--larson-text);
+    flex: 1;
+}
+
+/* Grid Controls for Modal */
+.larson_modal_grid_control {
+    display: flex;
+    align-items: center;
+}
+
+.larson_modal_grid_control select {
+    width: 100%;
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--larson-input-border);
+    border-radius: 6px;
+    color: var(--larson-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.larson_modal_grid_control select:hover:not(:disabled) {
+    border-color: var(--larson-accent);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.larson_modal_grid_control select:focus {
+    outline: none;
+    border-color: var(--larson-accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--larson-accent) 20%, transparent);
+}
+
+.larson_modal_grid_control select:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Warning Message for Modal */
+.larson_modal_warning {
+    background: color-mix(in srgb, #ff9800 15%, transparent);
+    border-left: 3px solid #ff9800;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin: 10px 0;
+    font-size: 0.8rem;
+    color: var(--larson-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.larson_modal_warning i {
+    color: #ff9800;
+    font-size: 0.9rem;
+}
+
+/* Thinking note in modal - part of Thinking card */
+.larson_grid_group_wrapper .larson_thinking_note {
+    grid-column: 1 / -1;
+    margin: 8px 0 0 0;
+    border-radius: 0 0 8px 8px;
+    border-left: none;
+    border: 1px solid rgba(255, 152, 0, 0.3);
+    border-top: none;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+}
+
+/* Global Settings Section for Modal */
+.larson_modal_global_settings {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--larson-border);
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.larson_modal_global_settings .larson_dropdown_row {
+    margin-bottom: 10px;
+}
+
+.larson_modal_global_settings .larson_dropdown_row:last-child {
+    margin-bottom: 0;
+}
+
+.larson_modal_global_settings .larson_dropdown_label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--larson-text);
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.larson_modal_global_settings .larson_dropdown_label i {
+    color: var(--larson-accent);
+    width: 14px;
+    text-align: center;
+}
+
+.larson_modal_global_settings select {
+    width: 100%;
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--larson-input-border);
+    border-radius: 6px;
+    color: var(--larson-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.larson_modal_global_settings select:hover {
+    border-color: var(--larson-accent);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.larson_modal_global_settings select:focus {
+    outline: none;
+    border-color: var(--larson-accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--larson-accent) 20%, transparent);
+}
+
+/* ============================================================
+   Custom Theme Dropdown with Swatches (Settings Panel)
+   ============================================================ */
+
+.larson_custom_select_wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.larson_custom_select_button {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--larson-input-border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--larson-text);
+    font-size: 14px;
+}
+
+.larson_custom_select_button:hover {
+    border-color: var(--larson-accent);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.larson_custom_select_button:focus {
+    outline: none;
+    border-color: var(--larson-accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--larson-accent) 20%, transparent);
+}
+
+.larson_theme_select_current {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.larson_theme_select_name {
+    color: var(--larson-text);
+}
+
+.larson_theme_select_swatches {
+    display: flex;
+    gap: 3px;
+}
+
+.larson_theme_select_swatches span {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.larson_select_chevron {
+    color: var(--larson-text-muted);
+    font-size: 12px;
+    transition: transform 0.2s ease;
+}
+
+.larson_custom_select_button[aria-expanded="true"] .larson_select_chevron {
+    transform: rotate(180deg);
+}
+
+.larson_theme_dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #1a1a1a;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.larson_theme_dropdown_item {
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    color: var(--larson-text);
+}
+
+.larson_theme_dropdown_item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.larson_theme_dropdown_item.active {
+    background: rgba(var(--larson-accent), 0.15);
+    border-left: 3px solid var(--larson-accent);
+}
+
+.larson_theme_dropdown_name {
+    flex: 1;
+    font-size: 14px;
+}
+
+.larson_theme_dropdown_swatches {
+    display: flex;
+    gap: 3px;
+}
+
+.larson_theme_dropdown_swatches span {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Custom scrollbar for theme dropdown */
+.larson_theme_dropdown::-webkit-scrollbar {
+    width: 8px;
+}
+
+.larson_theme_dropdown::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
+
+.larson_theme_dropdown::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+}
+
+.larson_theme_dropdown::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Modal Overlay & Container - see base rule at line ~1639 for .larson_options_overlay */
+
+.larson_options_modal {
+    position: absolute;
+    background: var(--larson-panel-bg, #151515);
+    border: 1px solid var(--larson-border, rgba(255, 255, 255, 0.15));
+    border-radius: 12px;
+    padding: 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    z-index: 9999;
+    min-width: 700px;
+    color: var(--larson-text, #f3f4f6);
+    font-family: inherit;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+}
+
+.larson_dropdown_content {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.larson_dropdown_pane {
+    padding: 20px;
+    border-right: 1px solid var(--larson-border, rgba(255, 255, 255, 0.1));
+}
+
+.larson_dropdown_pane:last-child {
+    border-right: none;
+    flex: 1;
+    /* Allow the last pane (theme pane) to grow */
+}
+
+/* Header */
+.larson_dropdown_header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--larson-border, rgba(255, 255, 255, 0.05));
+    padding-bottom: 10px;
+}
+
+.larson_dropdown_title {
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: 700;
+    color: var(--larson-accent, #7c3aed);
+}
+
+.larson_tooltip {
+    color: var(--larson-text-muted, #9ca3af);
+    position: relative;
+    cursor: help;
+}
+
+.larson_tooltip:hover .larson_tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+.larson_tooltiptext {
+    visibility: hidden;
+    width: 220px;
+    background-color: #222;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 10;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -110px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 0.85em;
+    font-weight: normal;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Grid Layout */
+.larson_modal_grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.larson_modal_column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.larson_modal_column_title {
+    margin: 0;
+    font-size: 0.9em;
+    color: var(--larson-text-muted, #9ca3af);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+}
+
+/* Checkboxes */
+.larson_checkbox_label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.larson_checkbox {
+    accent-color: var(--larson-accent, #7c3aed);
+    width: 16px;
+    height: 16px;
+}
+
+/* Dropdown Rows within Columns */
+.larson_dropdown_row {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.larson_dropdown_label {
+    font-size: 0.8em;
+    color: var(--larson-text-muted, #9ca3af);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.larson_dropdown_select {
+    background: var(--larson-input-bg, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--larson-input-border, rgba(255, 255, 255, 0.15));
+    color: var(--larson-text, #f3f4f6);
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    width: 100%;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.larson_dropdown_select:focus {
+    outline: none;
+    border-color: var(--larson-accent, #7c3aed);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.larson_dropdown_select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Theme Grid */
+.larson_theme_grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 600px;
+    overflow-y: auto;
+    width: 100%;
+    padding-right: 5px;
+}
+
+/* Scrollbar for theme grid */
+.larson_theme_grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.larson_theme_grid::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.larson_theme_grid::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+/* Theme Swatch Row */
+.larson_theme_swatch_row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+    text-align: left;
+    box-sizing: border-box;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0);
+}
+
+.larson_theme_swatch_row:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0);
+}
+
+.larson_theme_active {
+    border-color: var(--larson-accent, #7c3aed);
+    background: rgba(124, 58, 237, 0.1);
+    box-shadow: 0 0 10px rgba(124, 58, 237, 0.2);
+}
+
+.larson_theme_swatch_name {
+    font-weight: 500;
+    font-size: 0.95em;
+}
+
+.larson_theme_triadic_bar_segmented {
+    display: flex;
+    border-radius: 4px;
+    overflow: hidden;
+    width: 90px;
+    height: 18px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.larson_theme_triadic_bar_segmented span {
+    flex: 1;
+    height: 100%;
+}
+
+/* Warning */
+.larson_thinking_warning {
+    background: rgba(255, 153, 0, 0.1);
+    border: 1px solid rgba(255, 153, 0, 0.3);
+    color: #ffcc80;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.85em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    line-height: 1.4;
+}
+
+/* ============================================================
+   Custom Theme Modal Styles
+   ============================================================ */
+
+/* Modal Overlay */
+.larson_theme_modal_overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.larson_theme_modal_overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Modal Container */
+.larson_theme_modal {
+    background: var(--larson-panel-bg, #1a1a1a);
+    border: 1px solid var(--larson-border, rgba(255, 255, 255, 0.2));
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 550px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    color: var(--larson-text, #f3f4f6);
+    font-family: inherit;
+}
+
+/* Modal Title */
+.larson_theme_modal_title {
+    font-size: 1.5em;
+    font-weight: 700;
+    margin: 0 0 20px 0;
+    color: var(--larson-accent, #7c3aed);
+    text-align: center;
+}
+
+/* Live Preview Section */
+.larson_theme_preview_section {
+    margin-bottom: 24px;
+}
+
+.larson_theme_preview_label {
+    display: block;
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--larson-text-muted, #9ca3af);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.larson_theme_preview_bar {
+    height: 18px;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Theme Name Row */
+.larson_theme_modal_row {
+    margin-bottom: 20px;
+}
+
+.larson_theme_modal_row label {
+    display: block;
+    font-size: 0.9em;
+    font-weight: 600;
+    color: var(--larson-text, #f3f4f6);
+    margin-bottom: 8px;
+}
+
+.larson_theme_modal_row input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--larson-input-bg, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--larson-input-border, rgba(255, 255, 255, 0.15));
+    border-radius: 8px;
+    color: var(--larson-text, #f3f4f6);
+    font-size: 1em;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.larson_theme_modal_row input[type="text"]:focus {
+    outline: none;
+    border-color: var(--larson-accent, #7c3aed);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Color Swatches Grid */
+.larson_theme_color_grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.larson_theme_color_item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.larson_color_swatch {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid var(--larson-border, rgba(255, 255, 255, 0.2));
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    position: relative;
+    background: #7c3aed;
+}
+
+.larson_color_swatch:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    border-color: var(--larson-accent, #7c3aed);
+}
+
+.larson_color_swatch:active {
+    transform: scale(0.98);
+}
+
+.larson_theme_color_item label {
+    font-size: 0.75em;
+    font-weight: 500;
+    color: var(--larson-text-muted, #9ca3af);
+    text-align: center;
+}
+
+/* Advanced Mode Toggle */
+.larson_theme_advanced_toggle {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--larson-border, rgba(255, 255, 255, 0.1));
+    border-radius: 8px;
+}
+
+.larson_theme_advanced_toggle label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    color: var(--larson-text, #f3f4f6);
+}
+
+.larson_theme_advanced_toggle input[type="checkbox"] {
+    accent-color: var(--larson-accent, #7c3aed);
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* Advanced Mode Content */
+.larson_theme_advanced_content {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--larson-border, rgba(255, 255, 255, 0.1));
+    border-radius: 8px;
+}
+
+.larson_theme_hex_grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.larson_theme_hex_item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.larson_theme_hex_item label {
+    font-size: 0.75em;
+    font-weight: 600;
+    color: var(--larson-text-muted, #9ca3af);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.larson_hex_input {
+    width: 100%;
+    padding: 8px 10px;
+    background: var(--larson-input-bg, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--larson-input-border, rgba(255, 255, 255, 0.15));
+    border-radius: 6px;
+    color: var(--larson-text, #f3f4f6);
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.larson_hex_input:focus {
+    outline: none;
+    border-color: var(--larson-accent, #7c3aed);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.larson_hex_input::placeholder {
+    color: var(--larson-text-muted, #6b7280);
+}
+
+/* Modal Actions */
+.larson_theme_modal_actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+.larson_modal_secondary,
+.larson_modal_primary {
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 0.95em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    font-family: inherit;
+}
+
+.larson_modal_secondary {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--larson-text, #f3f4f6);
+    border: 1px solid var(--larson-border, rgba(255, 255, 255, 0.2));
+}
+
+.larson_modal_secondary:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.larson_modal_primary {
+    background: linear-gradient(135deg, var(--larson-accent, #7c3aed), #9333ea);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.larson_modal_primary:hover {
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+}
+
+.larson_modal_primary:active {
+    opacity: 0.9;
+}
+
+/* Scrollbar for modal */
+.larson_theme_modal::-webkit-scrollbar {
+    width: 8px;
+}
+
+.larson_theme_modal::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 4px;
+}
+
+.larson_theme_modal::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.larson_theme_modal::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+
+/* Updated CSS for 4-Column Layout and Preview Container */
+
+/* Preview Container Styles */
+.larson_theme_preview_container {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #0a0a0a;
+    border: 1px solid var(--larson-border, rgba(255, 255, 255, 0.15));
+    border-radius: 8px;
+}
+
+/* Theme Name Row with Randomize Button */
+.larson_theme_name_row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    margin-bottom: 20px;
+}
+
+.larson_theme_name_group {
+    flex: 1;
+}
+
+.larson_theme_name_group label {
+    display: block;
+    font-size: 0.9em;
+    font-weight: 600;
+    color: var(--larson-text, #f3f4f6);
+    margin-bottom: 8px;
+}
+
+.larson_theme_name_group input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--larson-input-bg, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--larson-input-border, rgba(255, 255, 255, 0.15));
+    border-radius: 8px;
+    color: var(--larson-text, #f3f4f6);
+    font-size: 1em;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.larson_theme_name_group input[type="text"]:focus {
+    outline: none;
+    border-color: var(--larson-accent, #7c3aed);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.larson_randomize_btn {
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--larson-border, rgba(255, 255, 255, 0.2));
+    border-radius: 8px;
+    color: var(--larson-text, #f3f4f6);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1.1em;
+}
+
+.larson_randomize_btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: rotate(180deg);
+}
+
+/* 4-Column Color Grid */
+.larson_theme_color_columns {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.larson_color_column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.larson_color_label {
+    font-size: 0.75em;
+    font-weight: 600;
+    color: var(--larson-text-muted, #9ca3af);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+/* Hex inputs within columns (hidden by default) */
+.larson_hex_advanced {
+    width: 100%;
+    padding: 6px 8px;
+    background: var(--larson-input-bg, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--larson-input-border, rgba(255, 255, 255, 0.15));
+    border-radius: 6px;
+    color: var(--larson-text, #f3f4f6);
+    font-family: 'Courier New', monospace;
+    font-size: 0.85em;
+    text-align: center;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.larson_hex_advanced:focus {
+    outline: none;
+    border-color: var(--larson-accent, #7c3aed);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+
+#larson_theme_preview_bar {
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: block !important;
+}
+
+/* Fix for theme list preview height to prevent jumping */
+.larson_theme_swatch_row .larson_bar {
+    height: 18px !important;
+    min-height: 18px !important;
+    max-height: 18px !important;
+    margin: 0 !important;
+    border-radius: 4px;
+}
+
+/* Error State */
+.larson_bar.larson_error {
+    background: #ff0000 !important;
+    box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
+    animation: larson_error_pulse 1.5s infinite alternate ease-in-out;
+}
+
+.larson_bar.larson_error::after,
+.larson_bar.larson_error::before,
+.larson_bar.larson_error .larson_scanner {
+    opacity: 0 !important;
+    transition: opacity 0.5s;
+}
+
+@keyframes larson_error_pulse {
+    from {
+        opacity: 0.8;
+        box-shadow: 0 0 5px #ff0000;
+    }
+
+    to {
+        opacity: 0.4;
+        box-shadow: 0 0 15px #ff0000;
+    }
+}
+
+/* SillyTavern Theme Info Text (Replaces Color Bar) */
+.larson_theme_st_info {
+    font-size: 0.7em;
+    font-weight: 700;
+    color: var(--larson-text-muted, #aaa);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
+}
+
+/* Fix Larson Header Visibility - Glen Larson Homage */
+/* Inspired by the iconic scanning light effect from Knight Rider and Battlestar Galactica */
+.larson_modal_title {
+    /* Use theme accent color for visibility */
+    color: var(--larson-accent, #7c3aed) !important;
+
+    /* Sci-fi font styling */
+    font-family: 'Arial Black', 'Impact', sans-serif !important;
+    font-weight: 900 !important;
+    font-size: 1.8em !important;
+    letter-spacing: 0.15em !important;
+    text-transform: uppercase !important;
+
+    /* Ensure clean rendering */
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+
+    /* Scanning light glow effect - subtle homage to Cylon/KITT scanner */
+    text-shadow:
+        0 0 10px var(--larson-glow, rgba(124, 58, 237, 0.8)),
+        0 0 20px var(--larson-glow, rgba(124, 58, 237, 0.6)),
+        0 0 30px var(--larson-glow, rgba(124, 58, 237, 0.4)),
+        0 0 40px var(--larson-glow, rgba(124, 58, 237, 0.2)),
+        2px 2px 3px rgba(0, 0, 0, 0.9) !important;
+
+    /* Ensure visibility */
+    opacity: 1 !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
+    -webkit-text-fill-color: unset !important;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+
+    /* Subtle pulsing animation - like a scanner at rest */
+    animation: larson_title_pulse 2.5s ease-in-out infinite !important;
+}
+
+@keyframes larson_title_pulse {
+
+    0%,
+    100% {
+        text-shadow:
+            0 0 10px var(--larson-glow, rgba(124, 58, 237, 0.8)),
+            0 0 20px var(--larson-glow, rgba(124, 58, 237, 0.6)),
+            0 0 30px var(--larson-glow, rgba(124, 58, 237, 0.4)),
+            0 0 40px var(--larson-glow, rgba(124, 58, 237, 0.2)),
+            2px 2px 3px rgba(0, 0, 0, 0.9);
+        filter: brightness(1);
+    }
+
+    50% {
+        text-shadow:
+            0 0 15px var(--larson-glow, rgba(124, 58, 237, 1)),
+            0 0 30px var(--larson-glow, rgba(124, 58, 237, 0.8)),
+            0 0 45px var(--larson-glow, rgba(124, 58, 237, 0.6)),
+            0 0 60px var(--larson-glow, rgba(124, 58, 237, 0.4)),
+            2px 2px 3px rgba(0, 0, 0, 0.9);
+        filter: brightness(1.2);
+    }
+}
+
+.larson_modal_tooltip {
+    /* Crisp, legible tooltip text */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    font-weight: 400 !important;
+    font-size: 0.5em !important;
+    letter-spacing: 0.02em !important;
+    line-height: 1.5 !important;
+    text-transform: none !important;
+
+    /* High contrast for readability */
+    color: rgba(255, 255, 255, 0.85) !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+
+    /* Smooth text rendering */
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+
+    /* No animation on tooltip */
+    opacity: 0.85 !important;
+    animation: none !important;
+}
+
+/* ============================================================
+   Mobile Responsiveness (Added by Antigravity)
+   ============================================================ */
+@media (max-width: 768px) {
+    /* ---- Replace Checkboxes with iOS Toggles on Mobile ---- */
+
+    /* Hide default checkbox appearance and make it look like iOS toggle */
+    /* Only for dropdown modal checkboxes */
+    .larson_dd_checkbox {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 44px !important;
+        height: 24px !important;
+        background: rgba(255, 255, 255, 0.2) !important;
+        border-radius: 12px !important;
+        position: relative !important;
+        cursor: pointer !important;
+        transition: background 0.3s ease !important;
+        border: none !important;
+        margin: 0 !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Toggle slider circle */
+    .larson_dd_checkbox::before {
+        content: '' !important;
+        position: absolute !important;
+        width: 20px !important;
+        height: 20px !important;
+        border-radius: 50% !important;
+        background: white !important;
+        top: 2px !important;
+        left: 2px !important;
+        transition: transform 0.3s ease !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    /* Checked state - green background */
+    .larson_dd_checkbox:checked {
+        background: #4ade80 !important;
+    }
+
+    /* Checked state - slide circle to right */
+    .larson_dd_checkbox:checked::before {
+        transform: translateX(20px) !important;
+    }
+
+    /* ---- Professional Enable Larson Toggle ---- */
+    .larson_toggle_row {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 10px !important;
+        padding: 14px 16px !important;
+        margin-bottom: 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+    }
+
+    .larson_toggle_label {
+        font-size: 0.95rem !important;
+        font-weight: 600 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+
+    .larson_toggle_label i {
+        font-size: 1.1rem !important;
+        width: 20px !important;
+    }
+
+    /* ---- Main Settings Panel (settings.html) ---- */
+
+    /* Stack the main grid */
+    /* Stack the main grid into card-based layout */
+    .larson_grid_container {
+        display: block !important;
+        padding: 12px 16px !important;
+        height: auto !important;
+    }
+
+    /* Hide table-like headers */
+    .larson_grid_header {
+        display: none !important;
+    }
+
+    /* Transform each group (label + 2 controls) into a card */
+    /* Label at top of card */
+    .larson_grid_label {
+        background: rgba(255, 255, 255, 0.05) !important;
+        padding: 12px 14px !important;
+        border-radius: 10px 10px 0 0 !important;
+        margin: 0 !important;
+        font-weight: 700 !important;
+        font-size: 0.95rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 8px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-bottom: none !important;
+    }
+
+    /* For labels with checkboxes/toggles (Idle, Thinking) */
+    .larson_grid_label .checkbox_label {
+        width: 100% !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        margin: 0 !important;
+    }
+
+    /* First control - left side of 2-column layout */
+    .larson_grid_label+.larson_grid_control {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-top: none !important;
+        border-right: 0.5px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 0 0 0 10px !important;
+        padding: 12px 9px 12px 14px !important;
+        margin: 0 !important;
+        display: inline-block !important;
+        width: 50% !important;
+        box-sizing: border-box !important;
+        vertical-align: top !important;
+    }
+
+    /* Second control - right side of 2-column layout */
+    .larson_grid_control+.larson_grid_control {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-top: none !important;
+        border-left: 0.5px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 0 0 10px 0 !important;
+        padding: 12px 14px 12px 9px !important;
+        margin: 0 0 12px 0 !important;
+        display: inline-block !important;
+        width: 50% !important;
+        box-sizing: border-box !important;
+        vertical-align: top !important;
+    }
+
+    /* Style the select elements */
+    .larson_grid_control select {
+        width: 100% !important;
+        max-width: none !important;
+        padding: 10px 12px !important;
+        font-size: 0.9rem !important;
+        margin: 0 !important;
+    }
+
+    /* Warning message needs to be full width */
+    .larson_warning {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Thinking note - part of Thinking card on mobile */
+    .larson_thinking_note {
+        background: rgba(255, 152, 0, 0.1) !important;
+        border: 1px solid rgba(255, 152, 0, 0.3) !important;
+        border-top: none !important;
+        border-radius: 0 0 10px 10px !important;
+        margin: 0 0 12px 0 !important;
+        padding: 10px 14px !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Ensure add theme button is visible and accessible */
+    .larson_add_theme_btn_settings {
+        width: 100% !important;
+        padding: 14px 16px !important;
+        font-size: 0.95rem !important;
+        min-height: 48px !important;
+        margin-top: 12px !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+        touch-action: manipulation !important;
+        position: relative !important;
+        z-index: 100 !important;
+    }
+
+    /* Global Settings */
+    .larson_setting_row {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+
+    .larson_setting_label {
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+    }
+
+    .larson_custom_select_wrapper {
+        width: 100%;
+    }
+
+    .larson_custom_select_button {
+        width: 100%;
+    }
+
+    /* Ensure theme dropdown has solid background in settings panel */
+    .larson_settings .larson_theme_dropdown,
+    .larson_theme_dropdown {
+        background: #1a1a1a !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8) !important;
+    }
+
+    /* ---- Dropdown Modal (Popup) ---- */
+
+    /* Mobile overlay: force full viewport coverage + safe-area padding */
+    .larson_options_overlay {
+        width: 100% !important;
+        height: 100% !important;
+        height: 100dvh !important;
+        padding: 16px !important;
+        padding-top: max(16px, env(safe-area-inset-top)) !important;
+        padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
+        padding-left: max(16px, env(safe-area-inset-left)) !important;
+        padding-right: max(16px, env(safe-area-inset-right)) !important;
+    }
+
+    /* Mobile dropdown: flex child centered by overlay, single column layout */
+    .larson_dropdown {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        bottom: auto !important;
+        right: auto !important;
+        transform: none !important;
+        margin: auto !important;
+        min-width: unset !important;
+        width: 100% !important;
+        max-width: 450px !important;
+        max-height: calc(100vh - 80px) !important;
+        /* Increased space for padding */
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+        border-radius: 12px !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8) !important;
+        /* CRITICAL: Ensure visibility on mobile */
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* Simple fade-in on mobile */
+    .larson_options_overlay_open .larson_dropdown {
+        animation: larson_modal_fade_in 0.2s ease forwards !important;
+    }
+
+    @keyframes larson_modal_fade_in {
+        0% {
+            opacity: 0;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .larson_dropdown_pane {
+        padding: 16px !important;
+        padding-bottom: 32px !important;
+        /* Extra bottom padding to ensure button visibility */
+        flex: none !important;
+        /* Remove flex: 1 to allow natural height expansion */
+        overflow: visible !important;
+        min-width: 100% !important;
+    }
+
+    .larson_dropdown_pane_left {
+        border-right: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        padding-bottom: 20px !important;
+        margin-bottom: 0 !important;
+    }
+
+    /* Ensure custom themes section is visible and has proper spacing */
+    .larson_custom_themes_section {
+        margin-top: 20px !important;
+        padding-bottom: 32px !important;
+        /* Extra padding at bottom */
+    }
+
+    /* Remove height constraints on theme grid for mobile */
+    .larson_theme_grid {
+        max-height: none !important;
+        overflow-y: visible !important;
+        /* Allow natural expansion on mobile */
+    }
+
+    .larson_add_theme_btn {
+        width: 100% !important;
+        padding: 14px 16px !important;
+        font-size: 0.95rem !important;
+        margin-top: 12px !important;
+        margin-bottom: 16px !important;
+        /* Bottom margin for breathing room */
+        min-height: 48px !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+        touch-action: manipulation !important;
+        position: relative !important;
+        z-index: 100 !important;
+        /* Ensure it's on top of everything in the pane */
+    }
+
+    /* Flex direction column for panes */
+    .larson_dropdown {
+        flex-direction: column !important;
+    }
+
+    .larson_modal_grid_container {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: none !important;
+    }
+
+    .larson_modal_grid_header {
+        display: none !important;
+    }
+
+    /* Transform group wrappers into cards on mobile */
+    .larson_modal_grid_container .larson_grid_group_wrapper,
+    .larson_dropdown .larson_grid_group_wrapper {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        grid-template-areas:
+            "label label"
+            "style speed" !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        padding: 12px !important;
+        border-radius: 10px !important;
+        gap: 8px !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        margin-bottom: 10px !important;
+        width: 100% !important;
+    }
+
+    .larson_modal_grid_container .larson_modal_grid_label,
+    .larson_dropdown .larson_modal_grid_label {
+        grid-area: label !important;
+        margin: 0 0 4px 0 !important;
+        background: none !important;
+        padding: 0 !important;
+        font-weight: 700 !important;
+        font-size: 0.9rem !important;
+        justify-content: flex-start !important;
+        border-radius: 0 !important;
+    }
+
+    .larson_modal_grid_label i {
+        font-size: 0.9rem !important;
+    }
+
+    /* Target specific children based on order in HTML wrapper */
+    .larson_grid_group_wrapper .larson_modal_grid_control:nth-of-type(1) {
+        grid-area: style !important;
+    }
+
+    .larson_grid_group_wrapper .larson_modal_grid_control:nth-of-type(2) {
+        grid-area: speed !important;
+    }
+
+    .larson_modal_grid_control {
+        margin-bottom: 0 !important;
+        width: 100% !important;
+    }
+
+    .larson_modal_grid_control select {
+        width: 100% !important;
+        padding: 8px 10px !important;
+        font-size: 0.85rem !important;
+    }
+
+    /* Make all interactive elements touch-friendly */
+
+    /* Make all interactive elements touch-friendly */
+    .larson_dropdown_select,
+    .larson_theme_swatch_row,
+    button,
+    input[type="checkbox"] {
+        min-height: 44px !important;
+        touch-action: manipulation;
+    }
+
+    /* Ensure smooth scrolling */
+    .larson_dropdown {
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+
+    /* Make theme swatches easier to tap */
+    .larson_theme_swatch_row {
+        padding: 12px !important;
+        margin-bottom: 8px !important;
+    }
+
+    /* Larger touch targets for checkboxes */
+    .larson_dd_checkbox {
+        width: 20px !important;
+        height: 20px !important;
+    }
+
+    /* ---- Custom Theme Creator Modal - MOBILE REDESIGN ---- */
+    .larson_theme_modal_overlay {
+        padding: 8px !important;
+        padding-top: max(8px, env(safe-area-inset-top)) !important;
+        padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+        padding-left: max(8px, env(safe-area-inset-left)) !important;
+        padding-right: max(8px, env(safe-area-inset-right)) !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow-y: auto !important;
+    }
+
+    .larson_theme_modal,
+    .larson_theme_modal.larson_theme_modal_mobile {
+        min-width: unset !important;
+        width: 100% !important;
+        max-width: 420px !important;
+        padding: 0 !important;
+        max-height: calc(100vh - 16px) !important;
+        margin: auto !important;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        bottom: auto !important;
+        right: auto !important;
+        transform: none !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* Compact Header */
+    .larson_theme_modal_header {
+        margin: 0 !important;
+        padding: 16px 18px !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        flex-shrink: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        min-height: 58px !important;
+    }
+
+    .larson_theme_modal_title {
+        font-size: 1rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1.5px !important;
+        margin: 0 !important;
+        font-weight: 600 !important;
+    }
+
+    .larson_modal_close_btn {
+        width: 38px !important;
+        height: 38px !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 1.3rem !important;
+        border-radius: 8px !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        flex-shrink: 0 !important;
+    }
+
+    .larson_modal_close_btn:active {
+        background: rgba(255, 255, 255, 0.12) !important;
+        transform: scale(0.95) !important;
+    }
+
+    /* Ensure Toggle Switch Works in Theme Modal */
+    .larson_theme_advanced_toggle .larson_toggle_switch {
+        width: 44px !important;
+        height: 24px !important;
+        position: relative !important;
+        display: inline-block !important;
+        flex-shrink: 0 !important;
+    }
+
+    .larson_theme_advanced_toggle .larson_toggle_switch input[type="checkbox"] {
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+
+    .larson_theme_advanced_toggle .larson_toggle_slider {
+        position: absolute !important;
+        cursor: pointer !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        transition: 0.3s !important;
+        border-radius: 34px !important;
+    }
+
+    .larson_theme_advanced_toggle .larson_toggle_slider:before {
+        position: absolute !important;
+        content: "" !important;
+        height: 18px !important;
+        width: 18px !important;
+        left: 3px !important;
+        bottom: 3px !important;
+        background-color: white !important;
+        transition: 0.3s !important;
+        border-radius: 50% !important;
+    }
+
+    .larson_theme_advanced_toggle .larson_toggle_switch input:checked+.larson_toggle_slider {
+        background-color: #4ade80 !important;
+    }
+
+    .larson_theme_advanced_toggle .larson_toggle_switch input:checked+.larson_toggle_slider:before {
+        transform: translateX(20px) !important;
+    }
+
+    /* Scrollable Content Area */
+    .larson_theme_modal>*:not(.larson_theme_modal_header):not(.larson_theme_modal_actions) {
+        padding: 0 16px !important;
+    }
+
+    .larson_theme_modal {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    /* HIDE Preview Bar on Mobile - takes up too much space */
+    .larson_theme_preview_container {
+        display: none !important;
+    }
+
+    /* Theme Name Row - Name + Icon Button */
+    .larson_theme_name_row {
+        display: grid !important;
+        grid-template-columns: 1fr auto !important;
+        gap: 10px !important;
+        align-items: end !important;
+        margin: 18px 0 14px 0 !important;
+        padding: 0 !important;
+    }
+
+    .larson_theme_name_group {
+        width: 100% !important;
+    }
+
+    .larson_theme_name_group label {
+        display: block !important;
+        font-size: 0.75rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.8px !important;
+        margin-bottom: 8px !important;
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    .larson_theme_name_group input {
+        width: 100% !important;
+        padding: 13px 14px !important;
+        font-size: 0.95rem !important;
+        border-radius: 10px !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #fff !important;
+    }
+
+    .larson_theme_name_group input:focus {
+        outline: none !important;
+        border-color: var(--larson-accent, #7c3aed) !important;
+        background: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    /* Randomize Button - Icon Only */
+    .larson_randomize_btn {
+        width: 50px !important;
+        height: 50px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        font-size: 1.3rem !important;
+        border-radius: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+
+    .larson_randomize_btn:active {
+        transform: scale(0.95) !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* Show Hex Inputs Toggle - Compact */
+    .larson_theme_advanced_toggle {
+        margin-bottom: 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        padding: 14px 16px !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .larson_theme_advanced_toggle label {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        cursor: pointer !important;
+        margin: 0 !important;
+    }
+
+    .larson_theme_advanced_toggle>label>span {
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    /* Color Grid - Optimized 2x2 */
+    .larson_theme_color_columns {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 14px !important;
+        margin-bottom: 16px !important;
+    }
+
+    /* Each Color Cell - Label, Circle, Hex (when shown) */
+    .larson_color_column {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 10px !important;
+        background: rgba(255, 255, 255, 0.04) !important;
+        padding: 14px 10px !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+
+    /* Compact Labels Above Circles */
+    .larson_color_label {
+        font-size: 0.7rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.8px !important;
+        text-align: center !important;
+        color: rgba(255, 255, 255, 0.5) !important;
+        margin: 0 !important;
+    }
+
+    /* Color Swatches - Large Touch Targets */
+    .larson_color_swatch {
+        width: 80px !important;
+        height: 80px !important;
+        border-radius: 50% !important;
+        border: 4px solid rgba(255, 255, 255, 0.25) !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+        flex-shrink: 0 !important;
+    }
+
+    .larson_color_swatch:active {
+        transform: scale(0.92) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    /* Hex Inputs - Below Each Color */
+    .larson_hex_input {
+        width: 100% !important;
+        max-width: 110px !important;
+        padding: 8px 6px !important;
+        font-size: 0.75rem !important;
+        text-align: center !important;
+        font-family: 'Monaco', 'Courier New', monospace !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        border-radius: 6px !important;
+        background: rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    /* Sticky Action Buttons at Bottom */
+    .larson_theme_modal_actions {
+        display: flex !important;
+        gap: 10px !important;
+        padding: 14px 16px !important;
+        padding-bottom: max(14px, env(safe-area-inset-bottom)) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+        background: #151515 !important;
+        flex-shrink: 0 !important;
+        position: sticky !important;
+        bottom: 0 !important;
+        margin-top: auto !important;
+    }
+
+    .larson_theme_modal_actions button {
+        flex: 1 !important;
+        padding: 14px !important;
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+        min-height: 48px !important;
+        border-radius: 8px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+    }
+}
+
+
+@media (max-width: 480px) {
+
+    /* Even smaller screens */
+    .larson_theme_color_columns {
+        grid-template-columns: 1fr !important;
+        /* Stack colors vertically */
+    }
+
+    .larson_color_swatch {
+        width: 50px;
+        height: 50px;
+    }
+
+    .larson_theme_preview_container {
+        padding: 10px;
+    }
+
+    .larson_modal_title {
+        font-size: 1.2rem !important;
+    }
+}
+
+/* ---- Custom Theme Modal Overhaul ---- */
+
+.larson_theme_modal_overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 100015 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease;
+    /* Ensure it's above dropdown modal */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.larson_theme_modal_overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.larson_theme_modal {
+    background: #151515;
+    width: 100%;
+    max-width: 500px;
+    max-height: calc(100vh - 32px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 20px;
+    margin: auto;
+    /* Ensure proper positioning on mobile */
+    position: relative;
+}
+
+
+/* Header */
+.larson_theme_modal_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.larson_theme_modal_title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+    color: var(--larson-header-muted, #ccc);
+}
+
+/* Preview Container */
+.larson_theme_preview_container {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60px;
+}
+
+/* Color Columns - Responsive */
+.larson_theme_color_columns {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.larson_color_column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.larson_color_label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    opacity: 0.7;
+    text-align: center;
+}
+
+/* Input Styles */
+.larson_theme_name_row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    align-items: flex-end;
+}
+
+.larson_theme_name_group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.larson_theme_name_group label {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.larson_theme_name_group input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px;
+    border-radius: 4px;
+    color: #fff;
+    width: 100%;
+}
+
+.larson_theme_modal_actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.larson_modal_primary,
+.larson_modal_secondary {
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    font-weight: 600;
+}
+
+.larson_modal_primary {
+    background: var(--larson-accent, #4caf50);
+    color: white;
+}
+
+.larson_modal_secondary {
+    background: transparent;
+    color: #aaa;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 480px) {
+    .larson_theme_color_columns {
+        grid-template-columns: 1fr;
+        /* Stack vertically */
+        gap: 12px;
+    }
+
+    .larson_color_column {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 8px 12px;
+        border-radius: 6px;
+        box-sizing: border-box;
+    }
+
+    .larson_color_label {
+        margin-bottom: 0;
+        text-align: left;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+}
