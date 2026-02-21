@@ -377,4 +377,35 @@ MIT License - Free to use, modify, and distribute
 
 Made with ❤️ for the SillyTavern community
 
+---
+
+## Check out my other extensions for SillyTavern: EchoChamber and Pathweaver
+
+### EchoChamber
+
+<a href="https://github.com/mattjaybe/SillyTavern-EchoChamber">EchoChamber</a> is a powerful extension for SillyTavern that generates a live reaction feed alongside your story. Whether it's a salt-fueled Discord chat, a viral Twitter feed, dramatic breaking news, or a sarcastic MST3K roasting session—EchoChamber immerses you in the world with AI-generated audience reactions.
+
+<table>
+  <tr>
+    <td width="50%" align="center"><b>🎮 Discord / Twitch</b><br><i>High-energy slang, emotes, and hype</i></td>
+    <td width="50%" align="center"><b>🐦 Twitter / X</b><br><i>Viral threads, hot takes, and hashtags</i></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/6cf79997-eab2-4fc5-b9b8-ba38673d4fd0" width="100%"/></td>
+    <td><img src="https://github.com/user-attachments/assets/2a065b2d-30b1-4c2b-a951-2f89154c84d0" width="100%"/></td>
+  </tr>
+</table>
+
+### Pathweaver
+
+<a href="https://github.com/mattjaybe/SillyTavern-Pathweaver">Pathweaver</a> is a creative companion. It analyzes your current chat context and generates Suggestions — options for where the story could go next. Whether you need a sudden plot twist, a new character introduction, or just a little nudge to break writer's block, Pathweaver provides up to 6 distinctive suggestions for every request.
+
+<p align="center">
+  <a href="https://github.com/user-attachments/assets/323e15fa-5149-4c54-b1c9-2e64b0a7123a"><img src="https://github.com/user-attachments/assets/323e15fa-5149-4c54-b1c9-2e64b0a7123a" alt="Pathweaver - Settings" width="70%"></a>
+  <br>
+  <sub><em>Each card with option to Copy (copies to clipboard), Insert (add to SillyTavern's input but doesn't send) or Send (immediately sends to the AI.)
+
+</em></sub>
+</p>
+
 </div>
