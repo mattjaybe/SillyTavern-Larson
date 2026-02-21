@@ -13,8 +13,8 @@ Choose from a diverse collection of professionally crafted animations, each desi
 
 - **Gradient** - Smooth color transitions that flow across the bar
 - **Breathe** - Gentle pulsing glow effect
-- **Pulse** - Traveling wave that showcases your theme colors
-- **Cylon** - Classic scanning beam effect (inspired by Battlestar Galactica)
+- **Pulse** - Traveling wave that pulses through the colors
+- **Cylon** - Classic scanning beam effect (inspired by Battlestar Galactica and Knight Rider)
 - **Segment** - Animated segments with dynamic gaps
 - **Glitch** - Digital corruption effect with rapid color shifts
 - **Liquid** - Organic flowing blobs
@@ -24,7 +24,7 @@ Choose from a diverse collection of professionally crafted animations, each desi
 Configure different animations for each interaction state:
 
 - **Generating** - Active animation while AI is responding
-- **Thinking** - Distinct animation during reasoning/thinking phases (supports Claude, GPT-4, Gemini, GLM5, and more)
+- **Thinking** - Optional distinct animation during reasoning/thinking phases (Streaming must be enabled for this feature)
 - **Idle** - Optional animation when waiting for input (can be disabled or hidden)
 
 ### ⚡ **Speed Controls**
@@ -35,8 +35,8 @@ Fine-tune animation speed for each state independently:
 
 ### 🎨 **Extensive Theming**
 **9 Built-in Themes:**
-- SillyTavern (matches your ST theme)
-- Default (Purple gradient)
+- SillyTavern (matches your custom ST theme)
+- Purple (Purple and violets)
 - Ocean (Blue depths)
 - Sunset (Warm oranges)
 - Forest (Natural greens)
@@ -54,13 +54,13 @@ Fine-tune animation speed for each state independently:
 
 ### 📐 **Flexible Display Options**
 - **3 Bar Heights**: Compact, Default, Tall
-- **Hide When Idle**: Option to make bar completely transparent when not in use
+- **Hide When Idle**: Option to make bar completely transparent when idle
 - **Mobile Optimized**: Full touch support with responsive layouts
 
 ### 🧠 **Smart Thinking Detection**
 Automatically detects and responds to thinking/reasoning phases across multiple LLM providers:
 - Supports `<thinking>`, `<think>`, `<reasoning>`, `<reason>`, `<thought>` tags
-- Works with Claude, GPT-4, Gemini, GLM5, and other compatible models
+- Works with Claude, GPT-4, Gemini, GLM5, and other compatible models when Streaming is enabled
 - Seamlessly transitions between thinking and generating animations
 
 ### 🎯 **Professional UI**
@@ -76,64 +76,63 @@ Automatically detects and responds to thinking/reasoning phases across multiple 
 
 ### Gradient
 *Smooth flowing color transitions*
-
-![Gradient Animation](./screenshots/gradient.gif)
+![Gradient](https://github.com/user-attachments/assets/04b6dffe-aabf-4bb1-89fd-ce69b96089e6)
 
 ---
 
 ### Breathe
-*Gentle pulsing with varying intensity*
-
-![Breathe Animation](./screenshots/breathe.gif)
+*Gentle breathing animation with varying intensity*
+![Breathe](https://github.com/user-attachments/assets/1fc9ab41-cc90-4f37-8397-9690dc6634c9)
 
 ---
 
 ### Pulse
 *Traveling wave that displays all theme colors*
 
-![Pulse Animation](./screenshots/pulse.gif)
+![Pulse](https://github.com/user-attachments/assets/0b4cff72-f634-4928-817b-5dd5c8c96081)
+
 
 ---
 
 ### Cylon
-*Classic scanning beam inspired by sci-fi*
+*Classic scanning beam inspired by sci-fi shows*
 
-![Cylon Animation](./screenshots/cylon.gif)
+![Cylon](https://github.com/user-attachments/assets/98e6184c-89e8-4066-aa42-e33b503e76a2)
 
 ---
 
 ### Segment
 *Dynamic segments with animated gaps*
 
-![Segment Animation](./screenshots/segment.gif)
+![Segment](https://github.com/user-attachments/assets/824d2ba9-f795-4404-93bb-88e7423bb28b)
 
 ---
 
 ### Glitch
 *Digital corruption with rapid color changes*
 
-![Glitch Animation](./screenshots/glitch.gif)
+![Glitch](https://github.com/user-attachments/assets/8ba0f081-4d0d-45b3-866f-a5fbd10b1ba8)
 
 ---
 
 ### Liquid
 *Organic flowing blob patterns*
 
-![Liquid Animation](./screenshots/liquid.gif)
+![Liquid](https://github.com/user-attachments/assets/b8c4693c-ca63-49b1-81e9-548c12856336)
 
 ---
 
 ### Convergence
 *Beams sliding inward from both sides*
 
-![Convergence Animation](./screenshots/convergence.gif)
+![Convergence](https://github.com/user-attachments/assets/09c0bbfc-75e4-42cc-9395-bfe7ab661366)
 
 ---
 
-### Combined States Example
-*Thinking (Cylon) → Generating (Gradient)*
+### Combination
+*Breathe (Idle) → Segment (Generating)*
 
-![Combined Animation Example](./screenshots/combined-thinking-generating.gif)
+![Breathe-Segment](https://github.com/user-attachments/assets/55784342-f502-4b32-a0b9-4d5b551b804d)
 
 ---
 
@@ -142,27 +141,25 @@ Automatically detects and responds to thinking/reasoning phases across multiple 
 ### Settings Panel
 *Compact settings integrated into SillyTavern's extension panel*
 
-![Settings Panel](./screenshots/settings-panel.png)
+<img width="401" height="692" alt="larson-panel" src="https://github.com/user-attachments/assets/f47c609c-b20d-4152-97a0-638dbabc2453" />
 
 ---
 
 ### Quick Access Modal
 *Popup modal accessible directly from the status bar*
 
-![Quick Access Modal](./screenshots/modal.png)
+<img width="779" height="589" alt="larson-settings" src="https://github.com/user-attachments/assets/40e85c98-80d6-4925-9b43-b93f80867e82" />
 
 ---
 
 ### Custom Theme Editor
 *Intuitive theme creator with live preview*
 
-![Custom Theme Editor](./screenshots/theme-editor.png)
+<img width="502" height="522" alt="custom-theme" src="https://github.com/user-attachments/assets/af67e32f-9ac6-449b-bcac-8f797aaa6944" />
 
 ---
 
 ## 🚀 Installation
-
-### Method 1: Install via SillyTavern Extension Installer (Recommended)
 
 1. Open SillyTavern
 2. Navigate to **Extensions** (puzzle piece icon)
@@ -172,17 +169,6 @@ Automatically detects and responds to thinking/reasoning phases across multiple 
    https://github.com/YOUR-USERNAME/SillyTavern-Larson
    ```
 5. Click **Install**
-6. Refresh the page
-
-### Method 2: Manual Installation
-
-1. Navigate to your SillyTavern installation folder
-2. Open the `public/scripts/extensions/third-party` directory
-3. Clone this repository:
-   ```bash
-   git clone https://github.com/YOUR-USERNAME/SillyTavern-Larson.git
-   ```
-4. Refresh SillyTavern
 
 ---
 
@@ -190,27 +176,12 @@ Automatically detects and responds to thinking/reasoning phases across multiple 
 
 ### Basic Setup
 
-1. After installation, find the **Larson** section in your Extensions panel
-2. Toggle **Enable Larson** to activate the status bar
+1. After installation, click on the animated bar above the input
 3. Choose your preferred **Animation Style** (default: Gradient)
 4. Select an **Animation Speed** (default: Normal)
 5. Pick a **Theme** from the dropdown
 
-**That's it!** You're ready to go with sensible defaults.
-
-### Customizing States
-
-**To configure Idle animations:**
-1. Enable the **Idle** toggle
-2. Choose your preferred idle animation style
-3. Set the idle animation speed
-4. Optionally, enable **Hide When Idle** to make the bar transparent when not active
-
-**To configure Thinking animations:**
-1. Enable the **Thinking** toggle
-2. Choose your preferred thinking animation style  
-3. Set the thinking animation speed
-4. ⚠️ **Note**: Thinking detection only works with streaming enabled
+**That's it!** Experiment and see which settings and colors you prefer.
 
 ### Creating Custom Themes
 
@@ -231,7 +202,6 @@ Automatically detects and responds to thinking/reasoning phases across multiple 
 - 💡 **Combination Tip**: Try pairing **Cylon** for Thinking with **Gradient** for Generating
 - 🎨 **Theme Tip**: Use the Randomize button in the theme editor for inspiration
 - 📱 **Mobile Tip**: Tap the bar itself to quickly access settings
-- ⚡ **Performance Tip**: Use Compact height for minimal visual footprint
 - 🖼️ **UI Tip**: Enable "Hide When Idle" for a cleaner interface when not chatting
 
 ---
@@ -261,12 +231,6 @@ All settings are saved automatically and persist across sessions.
 
 ## 🔧 Technical Details
 
-### Browser Compatibility
-- ✅ Chrome/Edge 90+
-- ✅ Firefox 88+
-- ✅ Safari 14+
-- ✅ Mobile browsers (iOS Safari, Chrome Mobile)
-
 ### Performance
 - Optimized CSS animations using GPU acceleration
 - Minimal JavaScript overhead
@@ -274,12 +238,12 @@ All settings are saved automatically and persist across sessions.
 - Efficient DOM manipulation
 
 ### Cross-LLM Support
-Thinking detection works with any LLM that outputs thinking tags in streaming mode:
+Thinking detection works with any LLM that outputs thinking tags in Streaming mode:
 - Claude (Anthropic) - `<thinking>`
 - GPT-4 (OpenAI) - `<thinking>`
 - Gemini (Google) - Native event + `<thinking>`
 - GLM5 (Zhipu AI) - `<think>`
-- Any model using `<reasoning>`, `<reason>`, or `<thought>` tags
+- Any model using any of the common thinking/reasoning tags
 
 ---
 
@@ -293,9 +257,8 @@ Thinking detection works with any LLM that outputs thinking tags in streaming mo
 
 ### Thinking animation not working
 - Verify **Thinking** toggle is enabled
-- Ensure you're using **Streaming** mode (not Instruct/Complete)
+- Ensure you're using **Streaming** mode
 - Check that your LLM outputs thinking tags
-- Look for the warning message: "Note: Only functions with Streaming presets"
 
 ### Animations feel choppy
 - Try a different animation style
@@ -305,7 +268,6 @@ Thinking detection works with any LLM that outputs thinking tags in streaming mo
 
 ### Custom theme not saving
 - Ensure theme name is not empty
-- Check browser console for errors
 - Try a different theme name
 - Verify localStorage is enabled in your browser
 
@@ -320,73 +282,6 @@ Contributions are welcome! Here's how you can help:
 - 🎨 **Create themes** - Share your custom color schemes
 - 📝 **Improve docs** - Help clarify instructions
 - 🧪 **Test** - Try it with different LLMs and report results
-
-### Development Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/YOUR-USERNAME/SillyTavern-Larson.git
-cd SillyTavern-Larson
-
-# Make your changes to:
-# - index.js (main logic)
-# - style.css (animations & styling)
-# - settings.html (UI structure)
-
-# Test in SillyTavern
-# (refresh page after changes)
-```
-
----
-
-## 📋 Roadmap
-
-Future enhancements being considered:
-
-- [ ] Additional animation styles (suggestions welcome!)
-- [ ] Animation intensity controls
-- [ ] Per-character animation settings
-- [ ] Export/import theme collections
-- [ ] Animation preview mode
-- [ ] Sound effect integration
-- [ ] Accessibility options (reduced motion)
-
----
-
-## 💖 Credits
-
-**Inspired by:**
-- The iconic Cylon eye scanner from Battlestar Galactica
-- Classic sci-fi UI aesthetics
-- The SillyTavern community's love for customization
-
-**Built with:**
-- Vanilla JavaScript (no dependencies!)
-- CSS3 animations with GPU acceleration
-- Modern web standards
-
----
-
-## 📜 License
-
-MIT License - feel free to use, modify, and distribute.
-
----
-
-## 🙏 Acknowledgments
-
-Special thanks to:
-- The SillyTavern team for creating an amazing platform
-- All beta testers who provided valuable feedback
-- The community for feature suggestions and bug reports
-
----
-
-## 📞 Support
-
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/YOUR-USERNAME/SillyTavern-Larson/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/YOUR-USERNAME/SillyTavern-Larson/discussions)
-- 📖 **Documentation**: [Wiki](https://github.com/YOUR-USERNAME/SillyTavern-Larson/wiki)
 
 ---
 
