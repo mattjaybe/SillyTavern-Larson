@@ -160,7 +160,7 @@
 
 ## 🎬 All 8 Animation Styles
 
-<table>
+<table id="animate-showcase">
 <tr>
 <td width="50%">
 
@@ -352,7 +352,7 @@
 - Efficient DOM manipulation
 
 ### LLM Compatibility
-Thinking detection works with any LLM in streaming mode that outputs:
+Thinking detection works with any LLM in Streaming mode that outputs:
 - `<thinking>` (Claude, GPT-4, Gemini)
 - `<think>` (GLM5)
 - `<reasoning>`, `<reason>`, `<thought>` (Various)
@@ -364,41 +364,6 @@ Thinking detection works with any LLM in streaming mode that outputs:
 - ✅ Mobile browsers
 
 </details>
-
----
-
-## 🤝 Contributing
-
-<details>
-<summary><b>💡 Ways to contribute</b></summary>
-
-<br>
-
-- 🐛 **Report bugs** - Open an issue with reproduction steps
-- 💡 **Suggest features** - Share your ideas in discussions
-- 🎨 **Create themes** - Share your custom color schemes
-- 📝 **Improve docs** - Help clarify instructions
-- 🧪 **Test** - Try it with different LLMs and report results
-
-### Development
-```bash
-git clone https://github.com/mattjaybe/SillyTavern-Larson.git
-cd SillyTavern-Larson
-# Edit: index.js, style.css, settings.html
-# Test in SillyTavern (refresh after changes)
-```
-
-</details>
-
----
-
-<div align="center">
-
-## 📞 Support & Links
-
-🐛 [Report Bug](https://github.com/mattjaybe/SillyTavern-Larson/issues) • 
-💬 [Discussions](https://github.com/mattjaybe/SillyTavern-Larson/discussions) • 
-📖 [Wiki](https://github.com/mattjaybe/SillyTavern-Larson/wiki)
 
 ---
 
