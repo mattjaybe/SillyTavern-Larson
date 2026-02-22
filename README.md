@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌈 SillyTavern Larson
+# 🌈 Larson
 
 **A visually stunning animated status bar for SillyTavern that brings your AI interactions to life.**
 
