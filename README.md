@@ -25,7 +25,7 @@
 ### 🎨 Beautiful Animations
 *Gradient style with live color transitions*
 
-![gradient](https://github.com/user-attachments/assets/e9817bb3-23d1-48e8-acb2-ed29493cd77e)
+![Gradient](https://github.com/user-attachments/assets/e9817bb3-23d1-48e8-acb2-ed29493cd77e)
 
 </td>
 <td width="50%">
