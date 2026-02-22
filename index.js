@@ -680,6 +680,20 @@
         var target = findInsertTarget();
         if (target) {
             target.parent.insertBefore(wrapper, target.before);
+
+            // Ensure Larson bar stays flush against send_form (below Pathweaver)
+            if (target.before && target.before.id === 'send_form' && !window.larsonOrderObserver) {
+                window.larsonOrderObserver = new MutationObserver(function () {
+                    const currentWrapper = document.getElementById('larson_bar_container');
+                    const sf = document.getElementById('send_form');
+                    if (currentWrapper && sf && currentWrapper.nextElementSibling !== sf) {
+                        if (sf.parentNode === currentWrapper.parentNode) {
+                            sf.parentNode.insertBefore(currentWrapper, sf);
+                        }
+                    }
+                });
+                window.larsonOrderObserver.observe(target.parent, { childList: true });
+            }
         } else {
             document.body.insertBefore(wrapper, document.body.firstChild);
         }
@@ -1035,7 +1049,7 @@
         if (ddThinkWarning) {
             ddThinkWarning.style.display = settings.thinking_animation_enabled ? 'flex' : 'none';
         }
-        
+
         if (ddHideIdle) { ddHideIdle.checked = !!settings.hide_when_idle; }
 
 
@@ -1607,13 +1621,13 @@
         if (hasReceivedRealContent) return;
 
         const text = (typeof token === 'string') ? token : '';
-        
+
         // Add current token to buffer (keep last 50 chars to catch split tags)
         tokenBuffer += text;
         if (tokenBuffer.length > 50) {
             tokenBuffer = tokenBuffer.slice(-50);
         }
-        
+
         const textLower = text.toLowerCase();
         const bufferLower = tokenBuffer.toLowerCase();
 
