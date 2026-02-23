@@ -14,6 +14,16 @@
     --larson-header-muted: #aaaaaa;
 }
 
+/* CRITICAL: Remove native checkbox appearance on ALL platforms (especially Android) */
+.larson_settings input[type="checkbox"],
+.larson_dropdown input[type="checkbox"],
+.larson_theme_modal input[type="checkbox"],
+.larson_toggle_switch input[type="checkbox"] {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+}
+
 /* Touch target wrapper */
 .larson_bar_container {
     position: relative;
@@ -1994,6 +2004,16 @@
     width: 0;
     height: 0;
     position: absolute;
+    /* Critical for Android - remove native checkbox appearance */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    outline: none;
+    pointer-events: none;
 }
 
 .larson_toggle_slider {
@@ -4148,6 +4168,7 @@
     .larson_dd_checkbox {
         appearance: none;
         -webkit-appearance: none;
+        -moz-appearance: none;
         width: 44px !important;
         height: 24px !important;
         background: rgba(255, 255, 255, 0.2) !important;
@@ -4638,6 +4659,16 @@
         opacity: 0 !important;
         width: 0 !important;
         height: 0 !important;
+        /* Critical for Android - remove native checkbox appearance */
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: none !important;
+        outline: none !important;
+        pointer-events: none !important;
     }
 
     .larson_theme_advanced_toggle .larson_toggle_slider {
