@@ -4549,11 +4549,15 @@
 
     /* Make all interactive elements touch-friendly */
 
-    /* Make all interactive elements touch-friendly */
+	/* Make all interactive elements touch-friendly */
     .larson_dropdown_select,
     .larson_theme_swatch_row,
-    button,
-    input[type="checkbox"] {
+    .larson_dropdown button,
+    .larson_settings button,
+    .larson_theme_modal button,
+    .larson_dropdown input[type="checkbox"],
+    .larson_settings input[type="checkbox"],
+    .larson_theme_modal input[type="checkbox"] {
         min-height: 44px !important;
         touch-action: manipulation;
     }
