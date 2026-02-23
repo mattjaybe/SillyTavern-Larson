@@ -36,11 +36,11 @@
     transition: filter 0.1s ease;
 }
 
-/* Expanded touch area - above the bar for easy tapping */
+/* Touch overlay - only covers the actual bar height, no extension */
 .larson_touch_overlay {
     position: absolute;
-    top: -8px;
-    bottom: -8px;
+    top: 0;
+    bottom: 0;
     left: 0;
     right: 0;
     width: 100%;
@@ -61,17 +61,17 @@
 }
 */
 
-/* On mobile, make the touch area even larger */
+/* Mobile - no extension needed, bar height is sufficient for tapping */
 @media (max-width: 768px) {
     .larson_bar_container {
         z-index: 100000;
     }
 
     .larson_touch_overlay {
-        top: -30px;
-        bottom: -30px;
+        /* Keep same as desktop - only cover bar height */
+        top: 0;
+        bottom: 0;
         z-index: 100002;
-        /* Force ensure it's clickable */
         pointer-events: auto !important;
     }
 }
