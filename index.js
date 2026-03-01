@@ -60,6 +60,7 @@
         thinking_animation_enabled: false,
         thinking_animation_style: 'gradient',
         thinking_animation_speed: 'normal',
+        click_to_open_enabled: true,
     });
 
     let settings = JSON.parse(JSON.stringify(defaultSettings));
@@ -71,6 +72,8 @@
     var dropdownReady = false;
     var optionsModalEscapeHandler = null;
     var explicitUserGeneration = false;
+    var overlayOpenedAt = 0;        // Timestamp when settings overlay was shown (Android synthetic-click guard)
+    var themeModalOpenedAt = 0;     // Timestamp when theme modal was shown (Android synthetic-click guard)
     var lastUserAction = 0;
     var extensionReadyAt = 0;
     var suppressedLoadGenerationStart = false;
@@ -90,7 +93,7 @@
         }
         overlayEl.classList.remove('larson_options_overlay_open');
         overlayEl.remove();
-        if (barEl) barEl.setAttribute('title', 'Click to open Larson options');
+        if (barEl && getSettings().click_to_open_enabled) barEl.setAttribute('title', 'Click to open Larson options');
     }
 
     function log(...args) { if (DEBUG) console.log(`[${EXTENSION_NAME}]`, ...args); }
@@ -209,9 +212,22 @@
         if (!barEl) return;
         const s = getSettings();
 
+        // Apply cursor to the bar itself, and any overlays catching clicks
+        barEl.style.setProperty('cursor', s.click_to_open_enabled ? 'pointer' : 'default', 'important');
+        if (barEl.nextElementSibling && barEl.nextElementSibling.classList.contains('larson_touch_overlay')) {
+            barEl.nextElementSibling.style.setProperty('cursor', s.click_to_open_enabled ? 'pointer' : 'default', 'important');
+        }
+
+        if (!s.click_to_open_enabled) {
+            barEl.removeAttribute('title');
+        } else if (!overlayEl || !overlayEl.parentNode) {
+            barEl.setAttribute('title', 'Click/Tap to open Larson settings');
+        }
+
         barEl.classList.toggle('larson_enabled', !!s.enabled);
         if (barEl.parentNode && barEl.parentNode.classList.contains('larson_bar_container')) {
             barEl.parentNode.classList.toggle('larson_enabled', !!s.enabled);
+            barEl.parentNode.style.setProperty('cursor', s.click_to_open_enabled ? 'pointer' : 'default', 'important');
         }
         barEl.classList.remove('larson_height_compact', 'larson_height_default', 'larson_height_tall');
         barEl.classList.add('larson_height_' + (s.bar_height || 'default'));
@@ -415,6 +431,8 @@
             </div>
         `;
         overlay.addEventListener('click', function (e) {
+            // Guard: ignore synthetic clicks Android fires after touchend (~300ms window)
+            if (Date.now() - themeModalOpenedAt < 350) return;
             if (e.target === overlay) overlay.classList.remove('active');
         });
         document.body.appendChild(overlay);
@@ -617,6 +635,7 @@
                 updatePreview();
             }
 
+            themeModalOpenedAt = Date.now();
             overlay.classList.add('active');
 
             // Apply EXACT same mobile positioning that fixed settings modal
@@ -704,6 +723,7 @@
         let touchStartTime = 0;
 
         const handleOpen = function (e) {
+            if (!settings.click_to_open_enabled) return;
             e.stopPropagation();
             e.preventDefault();
             toggleDropdown();
@@ -731,6 +751,7 @@
             const touchDuration = Date.now() - touchStartTime;
 
             if (!touchMoved && touchDuration < 500) {
+                if (!settings.click_to_open_enabled) return;
                 e.stopPropagation();
                 e.preventDefault();
                 toggleDropdown();
@@ -786,6 +807,8 @@
         overlayEl.className = 'larson_options_overlay';
         overlayEl.id = 'larson_options_overlay';
         overlayEl.addEventListener('click', function (e) {
+            // Guard: ignore synthetic clicks Android fires after touchend (~300ms window)
+            if (Date.now() - overlayOpenedAt < 350) return;
             if (e.target === overlayEl) closeOptionsModal();
         });
         dropdownEl = document.createElement('div');
@@ -898,6 +921,14 @@
                     <label class="larson_dropdown_label"><i class="fa-solid fa-eye-slash"></i> Hide When Idle</label>
                     <label class="larson_toggle_switch">
                         <input type="checkbox" id="larson_dd_hide_when_idle" class="larson_dd_checkbox">
+                        <span class="larson_toggle_slider"></span>
+                    </label>
+                </div>
+
+                <div class="larson_dropdown_row">
+                    <label class="larson_dropdown_label"><i class="fa-solid fa-hand-pointer"></i> Click/Tap to Open Settings</label>
+                    <label class="larson_toggle_switch">
+                        <input type="checkbox" id="larson_dd_click_to_open_enabled" class="larson_dd_checkbox">
                         <span class="larson_toggle_slider"></span>
                     </label>
                 </div>
@@ -1026,6 +1057,7 @@
         var ddThinkSpeed = leftPane.querySelector('#larson_dd_thinking_speed');
         var ddThinkWarning = leftPane.querySelector('#larson_dd_thinking_warning');
         var ddHideIdle = leftPane.querySelector('#larson_dd_hide_when_idle');
+        var ddClickToOpen = leftPane.querySelector('#larson_dd_click_to_open_enabled');
 
         if (ddIdleEn) { ddIdleEn.checked = !!settings.idle_animation_enabled; }
         if (ddIdleStyle) {
@@ -1051,6 +1083,7 @@
         }
 
         if (ddHideIdle) { ddHideIdle.checked = !!settings.hide_when_idle; }
+        if (ddClickToOpen) { ddClickToOpen.checked = !!settings.click_to_open_enabled; }
 
 
         function syncStyleSpeedToPreviews() {
@@ -1128,6 +1161,12 @@
         if (ddHideIdle) ddHideIdle.addEventListener('change', function () {
             settings.hide_when_idle = this.checked;
             getSettings().hide_when_idle = this.checked;
+            saveSettings();
+            applyBarStyles();
+        });
+        if (ddClickToOpen) ddClickToOpen.addEventListener('change', function () {
+            settings.click_to_open_enabled = this.checked;
+            getSettings().click_to_open_enabled = this.checked;
             saveSettings();
             applyBarStyles();
         });
@@ -1414,11 +1453,14 @@
         if (thinkWarning) thinkWarning.style.display = s.thinking_animation_enabled ? 'flex' : 'none';
         var hideIdleCb = dropdownEl.querySelector('#larson_dd_hide_when_idle');
         if (hideIdleCb) { hideIdleCb.checked = !!s.hide_when_idle; }
+        var clickToOpenCb = dropdownEl.querySelector('#larson_dd_click_to_open_enabled');
+        if (clickToOpenCb) { clickToOpenCb.checked = !!s.click_to_open_enabled; }
         dropdownEl.querySelectorAll('.larson_theme_swatch_row').forEach(b => {
             b.classList.toggle('larson_theme_active', b.dataset.theme === (s.theme || 'user'));
         });
         if (typeof window.larson_rebuildDropdownThemes === 'function') window.larson_rebuildDropdownThemes();
         if (barEl) barEl.removeAttribute('title');
+        overlayOpenedAt = Date.now();
         document.body.appendChild(overlayEl);
         overlayEl.classList.add('larson_options_overlay_open');
 
@@ -1927,6 +1969,8 @@
         if (thinkWarning) thinkWarning.style.display = s.thinking_animation_enabled ? 'flex' : 'none';
         const hideIdleCb = document.getElementById('larson_hide_when_idle');
         if (hideIdleCb) hideIdleCb.checked = !!s.hide_when_idle;
+        const clickToOpenCb = document.getElementById('larson_click_to_open_enabled');
+        if (clickToOpenCb) clickToOpenCb.checked = !!s.click_to_open_enabled;
         if (typeof window.larson_refreshThemeSelect === 'function') window.larson_refreshThemeSelect();
         const theme = document.getElementById('larson_theme');
         if (theme) theme.value = s.theme || 'user';
@@ -2049,6 +2093,10 @@
             const el = byId('larson_hide_when_idle');
             if (el) { s.hide_when_idle = el.checked; saveSettings(); applyBarStyles(); }
         };
+        const onClickToOpen = function () {
+            const el = byId('larson_click_to_open_enabled');
+            if (el) { s.click_to_open_enabled = el.checked; saveSettings(); applyBarStyles(); }
+        };
         if (byId('larson_enabled')) byId('larson_enabled').addEventListener('change', onEnabled);
         if (byId('larson_bar_height')) byId('larson_bar_height').addEventListener('change', onHeight);
         if (byId('larson_animation_style')) byId('larson_animation_style').addEventListener('change', onStyle);
@@ -2061,6 +2109,7 @@
         if (byId('larson_thinking_style')) byId('larson_thinking_style').addEventListener('change', onThinkingStyle);
         if (byId('larson_thinking_speed')) byId('larson_thinking_speed').addEventListener('change', onThinkingSpeed);
         if (byId('larson_hide_when_idle')) byId('larson_hide_when_idle').addEventListener('change', onHideWhenIdle);
+        if (byId('larson_click_to_open_enabled')) byId('larson_click_to_open_enabled').addEventListener('change', onClickToOpen);
 
         const addBtn = byId('larson_add_custom_theme');
         if (addBtn) {
@@ -2140,6 +2189,9 @@
         // Thinking warning
         const warning = byId('larson_thinking_warning');
         if (warning) warning.style.display = s.thinking_animation_enabled ? 'flex' : 'none';
+
+        setChecked('larson_hide_when_idle', s.hide_when_idle);
+        setChecked('larson_click_to_open_enabled', s.click_to_open_enabled);
 
         // Update hidden theme select
         setVal('larson_theme', s.theme, 'sillytavern');

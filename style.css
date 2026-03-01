@@ -55,7 +55,6 @@
     right: 0;
     width: 100%;
     z-index: 100001;
-    cursor: pointer;
     background: transparent;
     -webkit-tap-highlight-color: transparent;
     /* Ensure touch events work */
@@ -82,7 +81,6 @@
         top: 0;
         bottom: 0;
         z-index: 100002;
-        pointer-events: auto !important;
     }
 }
 
@@ -177,7 +175,6 @@
     width: 100%;
     z-index: 99999;
     height: 4px;
-    cursor: pointer;
     background: var(--larson-color-a);
     opacity: 0;
     visibility: hidden;
@@ -1147,29 +1144,37 @@
 .larson_bar.larson_processing.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_gradient {
     animation-duration: 5.33s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_breathe {
     animation-duration: 5.33s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_pulse {
     animation-duration: 5.33s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_cylon::after {
     animation-duration: 3.33s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_segment {
     animation-duration: 5.33s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_glitch {
     animation-duration: 6.22s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_liquid::before,
 .larson_bar.larson_processing.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_liquid::after {
     animation-duration: 8s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_convergence::before,
 .larson_bar.larson_processing.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_convergence::after {
     animation-duration: 4s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_slow.larson_thinking.larson_thinking_style_shimmer {
     animation-duration: 4s;
 }
@@ -1178,29 +1183,37 @@
 .larson_bar.larson_processing.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_gradient {
     animation-duration: 2.67s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_breathe {
     animation-duration: 2.67s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_pulse {
     animation-duration: 2.67s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_cylon::after {
     animation-duration: 1.6s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_segment {
     animation-duration: 2.67s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_glitch {
     animation-duration: 4.44s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_liquid::before,
 .larson_bar.larson_processing.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_liquid::after {
     animation-duration: 4s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_convergence::before,
 .larson_bar.larson_processing.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_convergence::after {
     animation-duration: 2s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_normal.larson_thinking.larson_thinking_style_shimmer {
     animation-duration: 2s;
 }
@@ -1209,29 +1222,37 @@
 .larson_bar.larson_processing.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_gradient {
     animation-duration: 1.33s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_breathe {
     animation-duration: 1.33s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_pulse {
     animation-duration: 1.33s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_cylon::after {
     animation-duration: 0.8s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_segment {
     animation-duration: 1.33s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_glitch {
     animation-duration: 2s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_liquid::before,
 .larson_bar.larson_processing.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_liquid::after {
     animation-duration: 2s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_convergence::before,
 .larson_bar.larson_processing.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_convergence::after {
     animation-duration: 1s;
 }
+
 .larson_bar.larson_processing.larson_thinking_speed_fast.larson_thinking.larson_thinking_style_shimmer {
     animation-duration: 0.8s;
 }
@@ -4527,7 +4548,7 @@
 
     /* Make all interactive elements touch-friendly */
 
-	/* Make all interactive elements touch-friendly */
+    /* Make all interactive elements touch-friendly */
     .larson_dropdown_select,
     .larson_theme_swatch_row,
     .larson_dropdown button,
