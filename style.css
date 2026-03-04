@@ -509,8 +509,8 @@
             var(--larson-color-c) 50%, var(--larson-color-b) 60%,
             var(--larson-color-a) 100%);
     background-size: 200% 100%;
-    -webkit-mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 7%, rgba(0, 0, 0, 0) 7%, rgba(0, 0, 0, 0) 10%);
-    mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 7%, rgba(0, 0, 0, 0) 7%, rgba(0, 0, 0, 0) 10%);
+    -webkit-mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 10px, transparent 10px, transparent 14px);
+    mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 10px, transparent 10px, transparent 14px);
     animation: larson_segment 2s linear infinite;
 }
 
@@ -671,9 +671,10 @@
     background-image: linear-gradient(90deg,
             var(--larson-color-a) 0%, var(--larson-color-b) 45%,
             var(--larson-color-c) 55%, var(--larson-color-c) 100%);
-    -webkit-mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 7%, rgba(0, 0, 0, 0) 7%, rgba(0, 0, 0, 0) 10%);
-    mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 7%, rgba(0, 0, 0, 0) 7%, rgba(0, 0, 0, 0) 10%);
-    animation: larson_segment 2.67s steps(10) infinite;
+    background-size: 200% 100%;
+    -webkit-mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 10px, transparent 10px, transparent 14px);
+    mask-image: repeating-linear-gradient(90deg, #fff 0px, #fff 10px, transparent 10px, transparent 14px);
+    animation: larson_segment 2.67s linear infinite;
 }
 
 /* Glitch thinking */
@@ -1261,7 +1262,8 @@
    Thinking State Bleed Fixes
    ============================================================ */
 /* Prevent the segmented mask from bleeding into other thinking styles */
-.larson_bar.larson_processing.larson_thinking:not(.larson_thinking_style_segment) {
+/* Only strip the mask when a thinking style is actually active (not just .larson_thinking which is always set during processing) */
+.larson_bar.larson_processing.larson_thinking[class*="larson_thinking_style_"]:not(.larson_thinking_style_segment) {
     -webkit-mask-image: none !important;
     mask-image: none !important;
 }
